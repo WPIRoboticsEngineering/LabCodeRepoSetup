@@ -163,7 +163,7 @@ public class LabCodeRepoSetupMain {
 						System.out.println("Waiting for the creation of " + repoFullName);
 						Thread.sleep(1000);
 					}
-					if (cloneDir.exists()) {
+					if (cloneDir!=null&&cloneDir.exists()) {
 						// creating list of commands
 						List<String> commands = new ArrayList<String>();
 						commands.add("git"); // command
