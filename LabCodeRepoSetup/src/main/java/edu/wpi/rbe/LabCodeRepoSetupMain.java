@@ -4,6 +4,8 @@
 package edu.wpi.rbe;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.kohsuke.github.GHAsset;
@@ -14,6 +16,7 @@ import org.kohsuke.github.GHTeam;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.PagedIterable;
+
 
 /**
  * @author hephaestus
@@ -26,11 +29,15 @@ public class LabCodeRepoSetupMain {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
+		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
+		
 		String projectSource = null;
 		String repoSource = null;
 		String projectDestBaseName = null;
 		String repoDestBaseName = null;
 		String teamDestBaseName = null;
+		HashMap<String,ArrayList<String>> teamAssignments =new HashMap<>();
+		
 		int numberOfTeams = 0;
 		try {
 			projectSource = args[0];
@@ -52,7 +59,7 @@ public class LabCodeRepoSetupMain {
 							+ "RBE200xTeam 21");
 			return;
 		}
-
+		
 		GitHub github = GitHub.connect();
 		GHOrganization source = github.getMyOrganizations().get(projectSource);
 		GHRepository sourcerepository = source.getRepository(repoSource);
@@ -70,7 +77,34 @@ public class LabCodeRepoSetupMain {
 			System.out.println("Teacher: "+t.getLogin());
 		}
 		
-		for (int i = 0; i < numberOfTeams; i++) {
+		for (int i = 1; i <= numberOfTeams; i++) {
+			String teamString = i>9?""+i:"0"+i;
+			GHTeam team = teams.get(teamDestBaseName+teamString);
+			if(team==null) {
+				System.out.println("ERROR: no such team "+teamDestBaseName+teamString);
+				continue;
+			}
+			System.out.println("Team Found: "+team.getName());
+			ArrayList<GHUser> toRemove = new ArrayList<>();
+			PagedIterable<GHUser> currentMembers = team.listMembers();
+			for(GHUser c:currentMembers) {
+				boolean isTeach = false;
+				for(GHUser t:teachingStaff) {
+					if(t.getLogin().contains(c.getLogin())) {
+						isTeach=true;
+						break;
+					}
+				}
+				if(!isTeach) {
+					toRemove.add(c);
+				}
+			}
+			for(GHUser f:toRemove) {
+				System.out.println("Removing "+f.getLogin()+" from "+team.getName());
+				team.remove(f);
+			}
+			
+			
 			
 		}
 		

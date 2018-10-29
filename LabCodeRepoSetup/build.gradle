@@ -26,5 +26,6 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     compile group: 'org.kohsuke', name: 'github-api', version: '1.94'
+     implementation 'com.google.code.gson:gson:2.8.5'
 }
 
