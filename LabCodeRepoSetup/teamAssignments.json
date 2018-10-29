@@ -1,5 +1,9 @@
 {
 "deleteall":["false"],
+"projectName":["RBE200x-lab"],
+"repoDestBaseNames":["RBE2002Code"],
+"teamDestBaseName":["RBE200xTeam"],
+"numberOfTeams":["21"],
 "20": ["cbp952"],
-"21": ["madhephaestus","cbp952"]
+"21": ["cbp952"]
 }
