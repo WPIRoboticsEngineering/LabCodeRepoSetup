@@ -149,9 +149,11 @@ public class LabCodeRepoSetupMain {
 				}
 				System.out.println("Team Found: " + team.getName());
 				for (GHUser t : teachingStaff) {
-					team.add(t, Role.MAINTAINER);
+					if(!t.getLogin().contains("madhephaestus"))
+						team.add(t, Role.MAINTAINER);
 				}
-				
+				if (team.hasMember(github.getUser("madhephaestus")))
+					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				String repoFullName = repoDestBaseName + teamString;
 				GHRepository myTeamRepo = dest.getRepository(repoFullName);
 				if (myTeamRepo == null) {
@@ -210,8 +212,6 @@ public class LabCodeRepoSetupMain {
 					continue;
 				}
 
-				if (team.hasMember(github.getUser("madhephaestus")))
-					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				for (String member : members) {
 					GHUser memberGH = github.getUser(member);
 					if (memberGH == null) {
@@ -223,6 +223,7 @@ public class LabCodeRepoSetupMain {
 						team.add(memberGH, Role.MAINTAINER);
 					}
 				}
+
 
 			}
 		}
