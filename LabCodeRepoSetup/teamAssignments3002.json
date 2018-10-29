@@ -1,0 +1,9 @@
+{
+"deleteall":["false"],
+"projectName":["RBE300X-Lab"],
+"repoDestBaseNames":["RBE3002Code"],
+"teamDestBaseName":["RBE300xTEAM"],
+"RBE3002Code":["RBE300X-Lab","rbe3002_demo"],
+"numberOfTeams":["20"],
+"20": ["ilpincy"]
+}
