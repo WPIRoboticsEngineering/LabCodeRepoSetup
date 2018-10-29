@@ -1,0 +1,10 @@
+{
+"deleteall":["false"],
+"projectName":["RBE200x-lab"],
+"repoDestBaseNames":["RBE2001Code"],
+"teamDestBaseName":["RBE200xTeam"],
+"numberOfTeams":["21"],
+"RBE2001Code":["WPIRoboticsEngineering","RBE2001_template"],
+"20": ["cbp952"],
+"21": ["cbp952"]
+}
