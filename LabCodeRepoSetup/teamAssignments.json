@@ -1,5 +1,5 @@
 {
-"deleteall":["true"],
+"deleteall":["false"],
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["RBE2002Code"],
 "teamDestBaseName":["RBE200xTeam"],
