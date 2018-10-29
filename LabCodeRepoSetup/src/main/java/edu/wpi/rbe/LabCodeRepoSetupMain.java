@@ -3,11 +3,14 @@
  */
 package edu.wpi.rbe;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
@@ -44,7 +47,6 @@ public class LabCodeRepoSetupMain {
 		Type collectionType = new TypeToken<HashMap<String, ArrayList<String>>>() {
 		}.getType();
 		String json = FileUtils.readFileToString(new File(teamAssignmentsFile));
-		System.out.println("Loading json: " + json);
 		HashMap<String, ArrayList<String>> teamAssignments = gson.fromJson(json, collectionType);
 
 		String projectDestBaseName = teamAssignments.get("projectName").get(0);
@@ -71,7 +73,24 @@ public class LabCodeRepoSetupMain {
 			deleteAll = Boolean.parseBoolean(teamAssignments.get("deleteall").get(0));
 		} catch (Exception e) {
 		}
-
+		ArrayList<GHUser> toRemove = new ArrayList<>();
+		PagedIterable<GHUser> currentMembers = dest.listMembers();
+		for (GHUser c : currentMembers) {
+			boolean isTeach = false;
+			for (GHUser t : teachingStaff) {
+				if (t.getLogin().contains(c.getLogin())) {
+					isTeach = true;
+					break;
+				}
+			}
+			if (!isTeach) {
+				toRemove.add(c);
+			}
+		}
+		for (GHUser f : toRemove) {
+			System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
+			dest.remove(f);
+		}
 		for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String repoDestBaseName = repoDestBaseNames.get(x);
 			if (deleteAll) {
@@ -86,23 +105,38 @@ public class LabCodeRepoSetupMain {
 					}
 				}
 			}
-			ArrayList<GHUser> toRemove = new ArrayList<>();
-			PagedIterable<GHUser> currentMembers = dest.listMembers();
-			for (GHUser c : currentMembers) {
-				boolean isTeach = false;
-				for (GHUser t : teachingStaff) {
-					if (t.getLogin().contains(c.getLogin())) {
-						isTeach = true;
-						break;
+			System.out.println("Looking for source information for " + repoDestBaseName);
+			File cloneDir = null;
+			String sourceURL =null;// "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
+			try {
+				String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
+				String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
+				if (sourceProj != null && sourceRepo != null) {
+					sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
+					
+					File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
+					if (!tmp.exists()) {
+						tmp.mkdirs();
+					}
+					tmp.deleteOnExit();
+					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
+					if (cloneDir.exists()) {
+						System.out.println(cloneDir.getAbsolutePath() + " Exists");
+					} else {
+						System.out.println("Cloning " + sourceURL);
+						System.out.println("Cloning to " + sourceRepo);
+						// creating list of commands
+						List<String> commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("clone"); // command
+						commands.add(sourceURL); // command
+						run( commands, tmp);
+
+						cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
 					}
 				}
-				if (!isTeach) {
-					toRemove.add(c);
-				}
-			}
-			for (GHUser f : toRemove) {
-				System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
-				dest.remove(f);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 
 			for (int i = 1; i <= numberOfTeams; i++) {
@@ -112,6 +146,10 @@ public class LabCodeRepoSetupMain {
 				if (team == null) {
 					System.out.println("ERROR: no such team " + teamDestBaseName + teamString);
 					continue;
+				}
+				System.out.println("Team Found: " + team.getName());
+				for (GHUser t : teachingStaff) {
+					team.add(t, Role.MAINTAINER);
 				}
 				
 				String repoFullName = repoDestBaseName + teamString;
@@ -123,19 +161,57 @@ public class LabCodeRepoSetupMain {
 						System.out.println("Waiting for the creation of " + repoFullName);
 						Thread.sleep(1000);
 					}
+					if (cloneDir.exists()) {
+						// creating list of commands
+						List<String> commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("remote"); // command
+						commands.add("set-url"); // command
+						commands.add("origin"); // command
+						commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
+						run( commands, cloneDir);
+						
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("checkout"); // command
+						commands.add("master"); // command
+						run( commands, cloneDir);
+						
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("remote"); // command
+						commands.add("-v"); // command
+						run( commands, cloneDir);
+						
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("config"); // command
+						commands.add("-l"); // command
+						run( commands, cloneDir);
+						
+						// creating list of commands
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("push"); // command
+						commands.add("-u"); // command
+						commands.add("origin"); // command
+						commands.add("master"); // command
+						run( commands, cloneDir);
+
+					} else {
+						System.out.println("Directory missing " + cloneDir.getAbsolutePath());
+					}
 				}
 				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
-				
+
 				ArrayList<String> members = teamAssignments.get(teamString);
 				if (members == null) {
 					System.out.println("ERROR: Team has no members in JSON " + teamString);
 					continue;
 				}
-				System.out.println("Team Found: " + team.getName());
-				for (GHUser t : teachingStaff) {
-					team.add(t, Role.MAINTAINER);
-				}
-				team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
+
+				if (team.hasMember(github.getUser("madhephaestus")))
+					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				for (String member : members) {
 					GHUser memberGH = github.getUser(member);
 					if (memberGH == null) {
@@ -148,10 +224,36 @@ public class LabCodeRepoSetupMain {
 					}
 				}
 
-
 			}
 		}
 
+	}
+	
+	public static void run(List<String> commands, File dir) throws Exception {
+		// creating the process
+		ProcessBuilder pb = new ProcessBuilder(commands);
+		// setting the directory
+		pb.directory(dir);
+		// startinf the process
+		Process process = pb.start();
+		process.waitFor();
+		int ev=process.exitValue();
+		//System.out.println("Running "+commands);
+		if(ev!=0) {
+			System.out.println("ERROR PROCESS Process exited with "+ev);
+		}
+		// for reading the ouput from stream
+		BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		BufferedReader errInput = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+		String s = null;
+		while (process.isAlive()) {
+			if ((s = stdInput.readLine()) != null)
+				System.out.println(s);
+			if ((s = errInput.readLine()) != null)
+				System.out.println(s);
+			Thread.sleep(100);
+		}
 	}
 
 	public static GHRepository createRepository(GHOrganization dest, String repoName, String description)
