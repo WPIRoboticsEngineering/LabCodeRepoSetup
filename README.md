@@ -1,5 +1,7 @@
 # LabCodeRepoSetup
-Use the Github API to set up a set of repositories
+
+Use the Github API to set up a set of repositories. The program will delete old repos, clear out users that are not in the TeachingStaff team, create fresh repositories, add the repositories to the appropriate team, and add all users defined in a config file to the appropriate team. Its tested with the 200x repository, but will work for the 3001/2 teams as well.
+
 # JSON Config file
 
 ```
