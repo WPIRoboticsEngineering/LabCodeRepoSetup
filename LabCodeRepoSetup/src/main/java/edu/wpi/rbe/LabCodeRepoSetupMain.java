@@ -253,8 +253,8 @@ public class LabCodeRepoSetupMain {
 				}
 			Map<String, GHTeam> existingTeams = dest.getTeams();
 			for (GHUser u : allStudents) {
-				String hwTeam = "HomeworkTeam" + u.getLogin();
-				String hwRepoName = "HomeworkCode" + u.getLogin();
+				String hwTeam = "HomeworkTeam-" + u.getLogin();
+				String hwRepoName = "HomeworkCode-" + u.getLogin();
 
 				GHRepository repositorie = dest.getRepository(hwRepoName);
 				if (repositorie == null) {
