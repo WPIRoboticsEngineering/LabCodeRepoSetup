@@ -53,7 +53,7 @@ Changing the deleteall field in the JSON file will force a delete of all the cur
 
 # Clearing out teams
 
-DO NOT delete the teams, ever! This program will celar stale teams. 
+DO NOT delete the teams, ever! This program will clear the membership of stale teams, not erase the team. 
 
 # Teaching Staff
 
