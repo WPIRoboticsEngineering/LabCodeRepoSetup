@@ -39,7 +39,7 @@ public class LabCodeRepoSetupMain {
 	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws Exception {
-
+		ArrayList<GHUser> allStudents = new ArrayList<>();
 		String teamAssignmentsFile = args[0];
 		int numberOfTeams = 0;
 
@@ -122,6 +122,19 @@ public class LabCodeRepoSetupMain {
 					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
 					if (cloneDir.exists()) {
 						System.out.println(cloneDir.getAbsolutePath() + " Exists");
+						List<String> commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("remote"); // command
+						commands.add("set-url"); // command
+						commands.add("origin"); // command
+						commands.add(sourceURL); // command
+						run( commands, cloneDir);
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("pull"); // command
+						commands.add("origin"); // command
+						commands.add("master"); // command
+						run( commands, cloneDir);
 					} else {
 						System.out.println("Cloning " + sourceURL);
 						System.out.println("Cloning to " + sourceRepo);
@@ -138,7 +151,7 @@ public class LabCodeRepoSetupMain {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
+			
 			for (int i = 1; i <= numberOfTeams; i++) {
 				String teamString = i > 9 ? "" + i : "0" + i;
 				GHTeam team = teams.get(teamDestBaseName + teamString);
@@ -146,6 +159,24 @@ public class LabCodeRepoSetupMain {
 				if (team == null) {
 					System.out.println("ERROR: no such team " + teamDestBaseName + teamString);
 					continue;
+				}
+				ArrayList<String> members = teamAssignments.get(teamString);
+				if (members == null) {
+					System.out.println("ERROR: Team has no members in JSON " + teamString);
+					continue;
+				}
+
+				for (String member : members) {
+					GHUser memberGH = github.getUser(member);
+					if (memberGH == null) {
+						System.out.println("ERROR GitHub user " + member + " does not exist");
+						continue;
+					}
+					if (!team.hasMember(memberGH)) {
+						System.out.println("Adding " + member + " to " + team.getName());
+						team.add(memberGH, Role.MAINTAINER);
+					}
+					allStudents.add(memberGH);
 				}
 				System.out.println("Team Found: " + team.getName());
 				for (GHUser t : teachingStaff) {
@@ -206,26 +237,11 @@ public class LabCodeRepoSetupMain {
 				}
 				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 
-				ArrayList<String> members = teamAssignments.get(teamString);
-				if (members == null) {
-					System.out.println("ERROR: Team has no members in JSON " + teamString);
-					continue;
-				}
-
-				for (String member : members) {
-					GHUser memberGH = github.getUser(member);
-					if (memberGH == null) {
-						System.out.println("ERROR GitHub user " + member + " does not exist");
-						continue;
-					}
-					if (!team.hasMember(memberGH)) {
-						System.out.println("Adding " + member + " to " + team.getName());
-						team.add(memberGH, Role.MAINTAINER);
-					}
-				}
 
 
 			}
+			
+			System.out.println("All Students "+allStudents);
 		}
 
 	}
