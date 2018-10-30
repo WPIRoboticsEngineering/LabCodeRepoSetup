@@ -1,5 +1,38 @@
 # LabCodeRepoSetup
-Use the Github API to set up a set of repositories
+
+Use the Github API to set up a set of repositories. The program will delete old repos, clear out users that are not in the TeachingStaff team, create fresh repositories, add the repositories to the appropriate team, and add all users defined in a config file to the appropriate team. Its tested with the 200x repository, but will work for the 3001/2 teams as well.
+## Usage
+
+Modify a JSON file with this terms data. If the students from the previous term are all done with thier repos, set the deleteall flag in the JSON.
+
+## Run
+```
+git clone https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git
+cd LabCodeRepoSetup/LabCodeRepoSetup/
+./gradlw run teamAssignments2001.json
+```
+# JSON Config file
+
+```
+{
+"deleteall":["false"],  
+"projectName":["RBE200x-lab"],
+"repoDestBaseNames":["RBE2002Code"],
+"teamDestBaseName":["RBE200xTeam"],
+"numberOfTeams":["21"],
+"RBE2002Code":["WPIRoboticsEngineering","RBE2002_template"],
+"20": ["cbp952"],
+"21": ["kid-a"]
+}
+```
+* deleteall - This is the flag to delete the stale repositories. It is much easier than deleting through the browser, but obviously dangerious
+* projectName - This is the name of the GItHub project we are modifying
+* repoDestBaseNames - This is the stub for the repositories that the students will own. Note this is a list and you can create as many repos for each team as desired.
+* teamDestBaseName - The base of the team name as it exists in GitHub. NOTE this needs to already esist in GitHub and needs to be created only once ever. 
+* numberOfTeams - the integer number of teams
+* RBE2002Code -  This is the tag to refer to the repoDestBaseNames above. It has 2 values, the project and repository of its source code. If this field is set (one per element of repoDestBaseNames), then the source code will be forked into the new repo on creation. 
+* 20 - the team list for team 20, note this only has Craig in it.
+* 21 - the team list for team 21, not this only has Loris in it. 
 
 # To Set up a repo
 Clone this code on a unix machine with git installed, and the SSH keys for the user that will be running this code.
