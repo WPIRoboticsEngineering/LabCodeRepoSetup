@@ -1,7 +1,16 @@
 # LabCodeRepoSetup
 
 Use the Github API to set up a set of repositories. The program will delete old repos, clear out users that are not in the TeachingStaff team, create fresh repositories, add the repositories to the appropriate team, and add all users defined in a config file to the appropriate team. Its tested with the 200x repository, but will work for the 3001/2 teams as well.
+## Usage
 
+Modify a JSON file with this terms data. If the students from the previous term are all done with thier repos, set the deleteall flag in the JSON.
+
+## Run
+```
+git clone https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git
+cd LabCodeRepoSetup/LabCodeRepoSetup/
+./gradlw run teamAssignments2001.json
+```
 # JSON Config file
 
 ```
