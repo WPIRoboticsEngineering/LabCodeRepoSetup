@@ -259,12 +259,15 @@ public class LabCodeRepoSetupMain {
 				GHRepository repositorie = dest.getRepository(hwRepoName);
 				if (repositorie == null) {
 					repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
+					System.out.println("Creating Student Homework team "+hwRepoName);
 				}
 				GHTeam myTeam = existingTeams.get(hwTeam);
 				if (myTeam == null) {
 					myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
+					
 				}
 				myTeam.add(u, Role.MAINTAINER);
+				myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
 				for (GHUser t : teachingStaff) {
 					if (!t.getLogin().contains("madhephaestus"))
 						myTeam.add(t, Role.MAINTAINER);
