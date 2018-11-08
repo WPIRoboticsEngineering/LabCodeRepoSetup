@@ -278,7 +278,7 @@ public class LabCodeRepoSetupMain {
 				try {
 					myTeam.add(u, Role.MAINTAINER);
 				}catch(Exception ex) {
-					System.out.println("Inviting "+u+" to "+hwTeam);
+					System.out.println("Inviting "+u.getLogin()+" to "+hwTeam);
 				}
 				myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
 				for (GHUser t : teachingStaff) {
