@@ -110,6 +110,7 @@ public class LabCodeRepoSetupMain {
 			}
 			System.out.println("Looking for source information for " + repoDestBaseName);
 			File cloneDir = null;
+			String cloneDirString = "";
 			String sourceURL = null;// "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
 			try {
 				String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
@@ -122,7 +123,8 @@ public class LabCodeRepoSetupMain {
 						tmp.mkdirs();
 					}
 					tmp.deleteOnExit();
-					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
+					cloneDirString=tmp.getAbsolutePath() + "/" + sourceRepo;
+					cloneDir = new File(cloneDirString);
 					if (cloneDir.exists()) {
 						System.out.println(cloneDir.getAbsolutePath() + " Exists");
 						List<String> commands = new ArrayList<String>();
@@ -152,9 +154,8 @@ public class LabCodeRepoSetupMain {
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println("No source project found, leaving repos blank");
 			}
-
 			for (int i = 1; i <= numberOfTeams; i++) {
 				String teamString = i > 9 ? "" + i : "0" + i;
 				GHTeam team = teams.get(teamDestBaseName + teamString);
@@ -168,21 +169,30 @@ public class LabCodeRepoSetupMain {
 					System.out.println("ERROR: Team has no members in JSON " + teamString);
 					continue;
 				}
-
+				System.out.println("Team Found: " + team.getName());
 				for (String member : members) {
+					try {
 					GHUser memberGH = github.getUser(member);
 					if (memberGH == null) {
 						System.out.println("ERROR GitHub user " + member + " does not exist");
 						continue;
 					}
 					if (!team.hasMember(memberGH)) {
-						System.out.println("Adding " + member + " to " + team.getName());
-						team.add(memberGH, Role.MAINTAINER);
+						try {
+							team.add(memberGH, Role.MAINTAINER);
+							System.out.println("Adding " + member + " to " + team.getName());
+						}catch (Exception e) {
+							System.out.println("Inviting " + member + " to " + team.getName());
+
+						}
 					}
 					
 					allStudents.add(memberGH);
+					}catch(Exception ex) {
+						System.err.println("\r\n\r\n ERROR "+member+" is not a valid GitHub username\r\n\r\n");
+					}
 				}
-				System.out.println("Team Found: " + team.getName());
+				
 				for (GHUser t : teachingStaff) {
 					if (!t.getLogin().contains("madhephaestus"))
 						team.add(t, Role.MAINTAINER);
@@ -235,8 +245,6 @@ public class LabCodeRepoSetupMain {
 						commands.add("master"); // command
 						run(commands, cloneDir);
 
-					} else {
-						System.out.println("Directory missing " + cloneDir.getAbsolutePath());
 					}
 				}
 				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
@@ -267,7 +275,11 @@ public class LabCodeRepoSetupMain {
 					myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
 					
 				}
-				myTeam.add(u, Role.MAINTAINER);
+				try {
+					myTeam.add(u, Role.MAINTAINER);
+				}catch(Exception ex) {
+					System.out.println("Inviting "+u+" to "+hwTeam);
+				}
 				myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
 				for (GHUser t : teachingStaff) {
 					if (!t.getLogin().contains("madhephaestus"))
