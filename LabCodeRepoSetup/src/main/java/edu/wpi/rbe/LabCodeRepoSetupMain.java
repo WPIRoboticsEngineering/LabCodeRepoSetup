@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,11 +51,56 @@ public class LabCodeRepoSetupMain {
 		}.getType();
 		String json = FileUtils.readFileToString(new File(teamAssignmentsFile));
 		HashMap<String, ArrayList<String>> teamAssignments = gson.fromJson(json, collectionType);
-
 		String projectDestBaseName = teamAssignments.get("projectName").get(0);
 		ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
 		String teamDestBaseName = teamAssignments.get("teamDestBaseName").get(0);
 		numberOfTeams = Integer.parseInt(teamAssignments.get("numberOfTeams").get(0));
+
+		if (args.length == 2) {
+			String csvFileName = args[1];
+			if (csvFileName.toLowerCase().endsWith(".csv")) {
+				File csv = new File(csvFileName);
+				String csvData = FileUtils.readFileToString(csv);
+				if (csv.exists()) {
+					String lines[] = csvData.split("\\r?\\n");
+					int teamNum = 0;
+					ArrayList<String> team = new ArrayList<>();
+					for (String line : lines) {
+						List<String> fields = Arrays.asList(line.split(","));
+						int lastTeamNum = teamNum;
+						try {
+
+							teamNum = Integer.parseInt(fields.get(5));
+
+						} catch (Exception ex) {
+							// System.out.println(fields);
+
+							// ex.printStackTrace();
+						}
+
+						if (teamNum > 0 && teamNum != lastTeamNum) {
+							if (lastTeamNum == numberOfTeams)
+								break;
+							System.out.println("Team # " + teamNum);
+							team = new ArrayList<>();
+							String teamString = teamNum > 9 ? "" + teamNum : "0" + teamNum;
+							teamAssignments.put(teamString, team);
+						}
+						if (teamNum > 0) {
+							try {
+								String username = fields.get(3);
+								System.out.println("\t"+username);
+								team.add(username);
+							}catch(Exception e) {
+								break;// end of the list
+							}
+							
+						}
+					}
+
+				}
+			}
+		}
 
 		GitHub github = GitHub.connect();
 		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
@@ -80,8 +126,7 @@ public class LabCodeRepoSetupMain {
 		for (GHUser c : currentMembers) {
 			boolean isTeach = false;
 			for (GHUser t : teachingStaff) {
-				if (t.getLogin().contains(c.getLogin())|| 
-						t.getLogin().contains("madhephaestus")) {
+				if (t.getLogin().contains(c.getLogin()) || t.getLogin().contains("madhephaestus")) {
 					isTeach = true;
 					break;
 				}
@@ -123,7 +168,7 @@ public class LabCodeRepoSetupMain {
 						tmp.mkdirs();
 					}
 					tmp.deleteOnExit();
-					cloneDirString=tmp.getAbsolutePath() + "/" + sourceRepo;
+					cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
 					cloneDir = new File(cloneDirString);
 					if (cloneDir.exists()) {
 						System.out.println(cloneDir.getAbsolutePath() + " Exists");
@@ -172,27 +217,27 @@ public class LabCodeRepoSetupMain {
 				System.out.println("Team Found: " + team.getName());
 				for (String member : members) {
 					try {
-					GHUser memberGH = github.getUser(member);
-					if (memberGH == null) {
-						System.out.println("ERROR GitHub user " + member + " does not exist");
-						continue;
-					}
-					if (!team.hasMember(memberGH)) {
-						try {
-							team.add(memberGH, Role.MAINTAINER);
-							System.out.println("Adding " + member + " to " + team.getName());
-						}catch (Exception e) {
-							System.out.println("Inviting " + member + " to " + team.getName());
-
+						GHUser memberGH = github.getUser(member);
+						if (memberGH == null) {
+							System.out.println("ERROR GitHub user " + member + " does not exist");
+							continue;
 						}
-					}
-					
-					allStudents.add(memberGH);
-					}catch(Exception ex) {
-						System.err.println("\r\n\r\n ERROR "+member+" is not a valid GitHub username\r\n\r\n");
+						if (!team.hasMember(memberGH)) {
+							try {
+								team.add(memberGH, Role.MAINTAINER);
+								System.out.println("Adding " + member + " to " + team.getName());
+							} catch (Exception e) {
+								System.out.println("Inviting " + member + " to " + team.getName());
+
+							}
+						}
+
+						allStudents.add(memberGH);
+					} catch (Exception ex) {
+						System.err.println("\r\n\r\n ERROR " + member + " is not a valid GitHub username\r\n\r\n");
 					}
 				}
-				
+
 				for (GHUser t : teachingStaff) {
 					if (!t.getLogin().contains("madhephaestus"))
 						team.add(t, Role.MAINTAINER);
@@ -256,7 +301,7 @@ public class LabCodeRepoSetupMain {
 			if (deleteAll)
 				for (GHTeam t : allTeams) {
 					if (t.getName().startsWith("HomeworkTeam")) {
-						System.out.println("Deleting team "+t.getName());
+						System.out.println("Deleting team " + t.getName());
 						t.delete();
 					}
 				}
@@ -268,17 +313,17 @@ public class LabCodeRepoSetupMain {
 				GHRepository repositorie = dest.getRepository(hwRepoName);
 				if (repositorie == null) {
 					repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
-					System.out.println("Creating Student Homework team "+hwRepoName);
+					System.out.println("Creating Student Homework team " + hwRepoName);
 				}
 				GHTeam myTeam = existingTeams.get(hwTeam);
 				if (myTeam == null) {
 					myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
-					
+
 				}
 				try {
 					myTeam.add(u, Role.MAINTAINER);
-				}catch(Exception ex) {
-					System.out.println("Inviting "+u.getLogin()+" to "+hwTeam);
+				} catch (Exception ex) {
+					System.out.println("Inviting " + u.getLogin() + " to " + hwTeam);
 				}
 				myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
 				for (GHUser t : teachingStaff) {
