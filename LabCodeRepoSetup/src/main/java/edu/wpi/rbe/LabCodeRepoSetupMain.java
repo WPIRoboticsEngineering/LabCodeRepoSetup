@@ -80,7 +80,8 @@ public class LabCodeRepoSetupMain {
 		for (GHUser c : currentMembers) {
 			boolean isTeach = false;
 			for (GHUser t : teachingStaff) {
-				if (t.getLogin().contains(c.getLogin())) {
+				if (t.getLogin().contains(c.getLogin())|| 
+						t.getLogin().contains("madhephaestus")) {
 					isTeach = true;
 					break;
 				}
