@@ -312,8 +312,8 @@ public class LabCodeRepoSetupMain {
 
 				GHRepository repositorie = dest.getRepository(hwRepoName);
 				if (repositorie == null) {
-					repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
 					System.out.println("Creating Student Homework team " + hwRepoName);
+					repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
 				}
 				GHTeam myTeam = existingTeams.get(hwTeam);
 				if (myTeam == null) {
