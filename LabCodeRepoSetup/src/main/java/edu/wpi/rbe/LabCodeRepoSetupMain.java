@@ -353,13 +353,16 @@ public class LabCodeRepoSetupMain {
 		BufferedReader errInput = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
 		String s = null;
-		while (process.isAlive()) {
-			if ((s = stdInput.readLine()) != null)
+		String e = null;
+		while ((s = stdInput.readLine()) != null||
+				(e = errInput.readLine()) != null) {
+			if (s != null)
 				System.out.println(s);
-			if ((s = errInput.readLine()) != null)
-				System.out.println(s);
+			if (e != null)
+				System.out.println(e);
 			Thread.sleep(100);
 		}
+				while (process.isAlive()) ;
 	}
 
 	public static GHRepository createRepository(GHOrganization dest, String repoName, String description)
