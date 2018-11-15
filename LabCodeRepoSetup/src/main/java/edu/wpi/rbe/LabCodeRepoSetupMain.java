@@ -89,12 +89,12 @@ public class LabCodeRepoSetupMain {
 						if (teamNum > 0) {
 							try {
 								String username = fields.get(3);
-								System.out.println("\t"+username);
+								System.out.println("\t" + username);
 								team.add(username);
-							}catch(Exception e) {
+							} catch (Exception e) {
 								break;// end of the list
 							}
-							
+
 						}
 					}
 
@@ -354,15 +354,15 @@ public class LabCodeRepoSetupMain {
 
 		String s = null;
 		String e = null;
-		while ((s = stdInput.readLine()) != null||
-				(e = errInput.readLine()) != null) {
+		while ((s = stdInput.readLine()) != null || (e = errInput.readLine()) != null) {
 			if (s != null)
 				System.out.println(s);
 			if (e != null)
 				System.err.println(e);
 			Thread.sleep(100);
 		}
-				while (process.isAlive()) ;
+		while (process.isAlive())
+			;
 	}
 
 	public static GHRepository createRepository(GHOrganization dest, String repoName, String description)
