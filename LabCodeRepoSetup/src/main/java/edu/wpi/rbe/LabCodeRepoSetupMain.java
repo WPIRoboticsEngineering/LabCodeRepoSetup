@@ -359,7 +359,7 @@ public class LabCodeRepoSetupMain {
 			if (s != null)
 				System.out.println(s);
 			if (e != null)
-				System.out.println(e);
+				System.err.println(e);
 			Thread.sleep(100);
 		}
 				while (process.isAlive()) ;
