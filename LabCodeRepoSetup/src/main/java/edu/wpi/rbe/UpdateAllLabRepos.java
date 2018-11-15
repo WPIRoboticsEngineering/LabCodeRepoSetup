@@ -92,6 +92,21 @@ public class UpdateAllLabRepos {
 					commands.add("master"); // command
 					LabCodeRepoSetupMain.run(commands, myDir);
 				}
+				String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
+				String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
+				List<String> commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("pull"); // command
+				commands.add("git@github.com:" + sourceProj + "/" + sourceRepo + ".git"); // command
+				commands.add("master"); // command
+				LabCodeRepoSetupMain.run(commands, myDir);
+				
+				commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("push"); // command
+				commands.add("origin"); // command
+				commands.add("master"); // command
+				LabCodeRepoSetupMain.run(commands, myDir);
 				
 			}
 		}
