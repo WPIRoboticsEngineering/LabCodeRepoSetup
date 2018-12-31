@@ -157,50 +157,7 @@ public class LabCodeRepoSetupMain {
 			File cloneDir = null;
 			String cloneDirString = "";
 			String sourceURL = null;// "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
-			try {
-				String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
-				String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
-				if (sourceProj != null && sourceRepo != null) {
-					sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
 
-					File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
-					if (!tmp.exists()) {
-						tmp.mkdirs();
-					}
-					tmp.deleteOnExit();
-					cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
-					cloneDir = new File(cloneDirString);
-					if (cloneDir.exists()) {
-						System.out.println(cloneDir.getAbsolutePath() + " Exists");
-						List<String> commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("remote"); // command
-						commands.add("set-url"); // command
-						commands.add("origin"); // command
-						commands.add(sourceURL); // command
-						run(commands, cloneDir);
-						commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("pull"); // command
-						commands.add("origin"); // command
-						commands.add("master"); // command
-						run(commands, cloneDir);
-					} else {
-						System.out.println("Cloning " + sourceURL);
-						System.out.println("Cloning to " + sourceRepo);
-						// creating list of commands
-						List<String> commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("clone"); // command
-						commands.add(sourceURL); // command
-						run(commands, tmp);
-
-						cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
-					}
-				}
-			} catch (Exception e) {
-				System.out.println("No source project found, leaving repos blank");
-			}
 			for (int i = 1; i <= numberOfTeams; i++) {
 				String teamString = i > 9 ? "" + i : "0" + i;
 				GHTeam team = teams.get(teamDestBaseName + teamString);
@@ -246,12 +203,83 @@ public class LabCodeRepoSetupMain {
 					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				String repoFullName = repoDestBaseName + teamString;
 				GHRepository myTeamRepo = dest.getRepository(repoFullName);
+
 				if (myTeamRepo == null) {
 					System.out.println("Missing Repo, creating " + repoFullName);
 					myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
 					while (dest.getRepository(repoFullName) == null) {
 						System.out.println("Waiting for the creation of " + repoFullName);
 						Thread.sleep(1000);
+					}
+					try {
+						String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
+						String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
+						if (sourceProj != null && sourceRepo != null) {
+							sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
+
+							File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
+							if (!tmp.exists()) {
+								tmp.mkdirs();
+							}
+							tmp.deleteOnExit();
+							cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
+							cloneDir = new File(cloneDirString);
+							if (cloneDir.exists()) {
+								
+								System.out.println(cloneDir.getAbsolutePath() + " Exists");
+								List<String> commands = new ArrayList<String>();
+								
+								commands = new ArrayList<String>();
+								commands.add("rm"); // command
+								commands.add("-rf"); // command
+								commands.add(cloneDir.getAbsolutePath()); // command
+								run(commands, tmp);
+								
+								commands = new ArrayList<String>();
+								commands.add("cp"); // command
+								commands.add("-R"); // command
+								commands.add(sourceRepo+"TMP"); // command
+								commands.add(sourceRepo); // command
+								run(commands, tmp);
+								
+								commands = new ArrayList<String>();
+								commands.add("git"); // command
+								commands.add("remote"); // command
+								commands.add("set-url"); // command
+								commands.add("origin"); // command
+								commands.add(sourceURL); // command
+								run(commands, cloneDir);
+								commands = new ArrayList<String>();
+								commands.add("git"); // command
+								commands.add("pull"); // command
+								commands.add("origin"); // command
+								commands.add("master"); // command
+								run(commands, cloneDir);
+							} else {
+								System.out.println("Cloning " + sourceURL);
+								System.out.println("Cloning to " + sourceRepo);
+								// creating list of commands
+								List<String> commands = new ArrayList<String>();
+								commands.add("git"); // command
+								commands.add("clone"); // command
+								commands.add(sourceURL); // command
+								run(commands, tmp);
+								
+								cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
+								
+								commands = new ArrayList<String>();
+								commands.add("cp"); // command
+								commands.add("-R"); // command
+								commands.add(sourceRepo); // command
+								commands.add(sourceRepo+"TMP"); // command
+								run(commands, tmp);
+			
+							}
+
+							
+						}
+					} catch (Exception e) {
+						System.out.println("No source project found, leaving repos blank");
 					}
 					if (cloneDir != null && cloneDir.exists()) {
 						// creating list of commands
@@ -280,6 +308,25 @@ public class LabCodeRepoSetupMain {
 						commands.add("config"); // command
 						commands.add("-l"); // command
 						run(commands, cloneDir);
+						
+						File templateINO = new File(cloneDir.getAbsolutePath()+"/template.ino");
+						if(templateINO.exists()) {
+							commands = new ArrayList<String>();
+							commands.add("git"); // command
+							commands.add("mv"); // command
+							commands.add("template.ino"); // command
+							commands.add(repoFullName+".ino"); // command
+							run(commands, cloneDir);
+							
+							
+							commands = new ArrayList<String>();
+							commands.add("git"); // command
+							commands.add("commit"); // command
+							commands.add("-a"); // command
+							commands.add("-m'Changing ino name'"); // command
+							run(commands, cloneDir);
+						}
+						
 
 						// creating list of commands
 						commands = new ArrayList<String>();
