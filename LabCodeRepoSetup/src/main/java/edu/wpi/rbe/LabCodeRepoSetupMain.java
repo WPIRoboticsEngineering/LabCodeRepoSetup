@@ -333,12 +333,17 @@ public class LabCodeRepoSetupMain {
 							commands.add("doxy.dox"); // command
 							run(commands, cloneDir);
 							
+							commands = new ArrayList<String>();
+							commands.add("git"); // command
+							commands.add("add"); // command
+							commands.add("doc/html/*"); // command
+							run(commands, cloneDir);
 							
 							commands = new ArrayList<String>();
 							commands.add("git"); // command
 							commands.add("commit"); // command
 							commands.add("-a"); // command
-							commands.add("-m'Changing ino name'"); // command
+							commands.add("-mDoxygen"); // command
 							run(commands, cloneDir);
 						}
 						
@@ -416,12 +421,13 @@ public class LabCodeRepoSetupMain {
 
 		String s = null;
 		String e = null;
+		Thread.sleep(100);
 		while ((s = stdInput.readLine()) != null || (e = errInput.readLine()) != null) {
 			if (s != null)
 				System.out.println(s);
 			if (e != null)
 				System.err.println(e);
-			Thread.sleep(100);
+			//
 		}
 		while (process.isAlive())
 			;
