@@ -326,11 +326,11 @@ public class LabCodeRepoSetupMain {
 							commands.add("-m'Changing ino name'"); // command
 							run(commands, cloneDir);
 						}
-						File doxyfile = new File(cloneDir.getAbsolutePath()+"/doxy.dox");
+						File doxyfile = new File(cloneDir.getAbsolutePath()+"/doxy.doxyfile");
 						if(doxyfile.exists()) {
 							commands = new ArrayList<String>();
 							commands.add("doxygen"); // command
-							commands.add("doxy.dox"); // command
+							commands.add("doxy.doxyfile"); // command
 							run(commands, cloneDir);
 							
 							commands = new ArrayList<String>();
