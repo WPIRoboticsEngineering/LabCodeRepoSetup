@@ -6,11 +6,19 @@ Use the Github API to set up a set of repositories. The program will delete old 
 Modify a JSON file with this terms data. If the students from the previous term are all done with thier repos, set the deleteall flag in the JSON.
 
 ## Run
-```
-git clone https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git
-cd LabCodeRepoSetup/LabCodeRepoSetup/
-./gradlw run teamAssignments2001.json
-```
+Open the project in Eclipse or other IDE as a Gradle project.
+
+Run LabCodeRepoSetupMain with a json file as arguments to set up repos for the start of term
+
+Run LabCodeRepoSetupMain with a json file and a csv file as arguments to set up repos for the start of term by parsing the csv for the student-team mapping. CAUTION this is brittle, the json is more stable.
+
+Run DownloadAllLabRepos with a json file as arguments to download all Lab repos for grading
+
+Run DownloadAllHomeworkRepos with a json file as arguments to download all Homework repos for grading
+
+Run UpdateAllLabRepos with a json file as arguments to Hotfix student lab repos with changes made to the source repo.
+
+
 # JSON Config file
 
 ```
