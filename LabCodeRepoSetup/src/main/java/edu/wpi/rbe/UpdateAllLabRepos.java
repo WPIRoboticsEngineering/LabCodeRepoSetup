@@ -55,55 +55,58 @@ public class UpdateAllLabRepos {
 		}
 		System.out.println("Found " + projectDestBaseName);
 
-
 		for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String repoDestBaseName = repoDestBaseNames.get(x);
 			for (int i = 1; i <= numberOfTeams; i++) {
-				String teamString = i > 9 ? "" + i : "0" + i;
+				try {
+					String teamString = i > 9 ? "" + i : "0" + i;
 
-				String repoFullName = repoDestBaseName + teamString;
-				File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
-				if (!tmp.exists()) {
-					tmp.mkdirs();
-				}
-				tmp.deleteOnExit();
-				String cloneDirString = tmp.getAbsolutePath() + "/" ;
-				File cloneDir = new File(cloneDirString);
-				File myDir = new File(cloneDirString+repoFullName);
-				if(!myDir.exists()) {
-					System.out.println("Cloning "+repoFullName+" to "+cloneDirString);
+					String repoFullName = repoDestBaseName + teamString;
+					File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
+					if (!tmp.exists()) {
+						tmp.mkdirs();
+					}
+					tmp.deleteOnExit();
+					String cloneDirString = tmp.getAbsolutePath() + "/";
+					File cloneDir = new File(cloneDirString);
+					File myDir = new File(cloneDirString + repoFullName);
+					if (!myDir.exists()) {
+						System.out.println("Cloning " + repoFullName + " to " + cloneDirString);
+						List<String> commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("clone"); // command
+						commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
+						LabCodeRepoSetupMain.run(commands, cloneDir);
+						myDir = new File(cloneDirString + repoFullName);
+					} else {
+						System.out.println(myDir.getName() + " exists");
+						List<String> commands = new ArrayList<String>();
+						commands = new ArrayList<String>();
+						commands.add("git"); // command
+						commands.add("pull"); // command
+						commands.add("origin"); // command
+						commands.add("master"); // command
+						LabCodeRepoSetupMain.run(commands, myDir);
+					}
+					String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
+					String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
 					List<String> commands = new ArrayList<String>();
-					commands.add("git"); // command
-					commands.add("clone"); // command
-					commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
-					LabCodeRepoSetupMain.run(commands, cloneDir);
-					myDir = new File(cloneDirString+repoFullName);
-				}else {
-					System.out.println(myDir.getName()+" exists");
-					List<String> commands = new ArrayList<String>();
-					commands = new ArrayList<String>();
 					commands.add("git"); // command
 					commands.add("pull"); // command
+					commands.add("git@github.com:" + sourceProj + "/" + sourceRepo + ".git"); // command
+					commands.add("master"); // command
+					LabCodeRepoSetupMain.run(commands, myDir);
+
+					commands = new ArrayList<String>();
+					commands.add("git"); // command
+					commands.add("push"); // command
 					commands.add("origin"); // command
 					commands.add("master"); // command
 					LabCodeRepoSetupMain.run(commands, myDir);
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
-				String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
-				String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
-				List<String> commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("pull"); // command
-				commands.add("git@github.com:" + sourceProj + "/" + sourceRepo + ".git"); // command
-				commands.add("master"); // command
-				LabCodeRepoSetupMain.run(commands, myDir);
-				
-				commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("push"); // command
-				commands.add("origin"); // command
-				commands.add("master"); // command
-				LabCodeRepoSetupMain.run(commands, myDir);
-				
+
 			}
 		}
 
