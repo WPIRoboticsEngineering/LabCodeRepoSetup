@@ -55,11 +55,7 @@ public class UpdateAllLabRepos {
 		}
 		System.out.println("Found " + projectDestBaseName);
 
-		Map<String, GHTeam> teams = dest.getTeams();
-		PagedIterable<GHUser> teachingStaff = teams.get("TeachingStaff").listMembers();
-		for (GHUser t : teachingStaff) {
-			System.out.println("Teacher: " + t.getLogin());
-		}
+
 		for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String repoDestBaseName = repoDestBaseNames.get(x);
 			for (int i = 1; i <= numberOfTeams; i++) {
