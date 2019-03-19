@@ -55,7 +55,11 @@ public class LabCodeRepoSetupMain {
 		ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
 		String teamDestBaseName = teamAssignments.get("teamDestBaseName").get(0);
 		numberOfTeams = Integer.parseInt(teamAssignments.get("numberOfTeams").get(0));
-
+		boolean useHW = true;
+		try {
+			useHW = Boolean.parseBoolean(teamAssignments.get("homework").get(0));
+		} catch (Throwable t) {
+		}
 		if (args.length == 2) {
 			String csvFileName = args[1];
 			if (csvFileName.toLowerCase().endsWith(".csv")) {
@@ -112,8 +116,10 @@ public class LabCodeRepoSetupMain {
 		System.out.println("Found " + projectDestBaseName);
 
 		Map<String, GHTeam> teams = dest.getTeams();
-		PagedIterable<GHUser> teachingStaff = teams.get("TeachingStaff").listMembers();
-		for (GHUser t : teachingStaff) {
+		GHTeam teachTeam = teams.get("TeachingStaff");
+		PagedIterable<GHUser> ts = teachTeam.listMembers();
+		
+		for (GHUser t : ts) {
 			System.out.println("Teacher: " + t.getLogin());
 		}
 		boolean deleteAll = false;
@@ -125,7 +131,7 @@ public class LabCodeRepoSetupMain {
 		PagedIterable<GHUser> currentMembers = dest.listMembers();
 		for (GHUser c : currentMembers) {
 			boolean isTeach = false;
-			for (GHUser t : teachingStaff) {
+			for (GHUser t : teachTeam.listMembers()) {
 				if (t.getLogin().contains(c.getLogin()) || t.getLogin().contains("madhephaestus")) {
 					isTeach = true;
 					break;
@@ -195,10 +201,6 @@ public class LabCodeRepoSetupMain {
 					}
 				}
 
-				for (GHUser t : teachingStaff) {
-					if (!t.getLogin().contains("madhephaestus"))
-						team.add(t, Role.MAINTAINER);
-				}
 				if (team.hasMember(github.getUser("madhephaestus")))
 					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				String repoFullName = repoDestBaseName + teamString;
@@ -225,23 +227,23 @@ public class LabCodeRepoSetupMain {
 							cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
 							cloneDir = new File(cloneDirString);
 							if (cloneDir.exists()) {
-								
+
 								System.out.println(cloneDir.getAbsolutePath() + " Exists");
 								List<String> commands = new ArrayList<String>();
-								
+
 								commands = new ArrayList<String>();
 								commands.add("rm"); // command
 								commands.add("-rf"); // command
 								commands.add(cloneDir.getAbsolutePath()); // command
 								run(commands, tmp);
-								
+
 								commands = new ArrayList<String>();
 								commands.add("cp"); // command
 								commands.add("-R"); // command
-								commands.add(sourceRepo+"TMP"); // command
+								commands.add(sourceRepo + "TMP"); // command
 								commands.add(sourceRepo); // command
 								run(commands, tmp);
-								
+
 								commands = new ArrayList<String>();
 								commands.add("git"); // command
 								commands.add("remote"); // command
@@ -264,19 +266,18 @@ public class LabCodeRepoSetupMain {
 								commands.add("clone"); // command
 								commands.add(sourceURL); // command
 								run(commands, tmp);
-								
+
 								cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
-								
+
 								commands = new ArrayList<String>();
 								commands.add("cp"); // command
 								commands.add("-R"); // command
 								commands.add(sourceRepo); // command
-								commands.add(sourceRepo+"TMP"); // command
+								commands.add(sourceRepo + "TMP"); // command
 								run(commands, tmp);
-			
+
 							}
 
-							
 						}
 					} catch (Exception e) {
 						System.out.println("No source project found, leaving repos blank");
@@ -308,17 +309,16 @@ public class LabCodeRepoSetupMain {
 						commands.add("config"); // command
 						commands.add("-l"); // command
 						run(commands, cloneDir);
-						
-						File templateINO = new File(cloneDir.getAbsolutePath()+"/template.ino");
-						if(templateINO.exists()) {
+
+						File templateINO = new File(cloneDir.getAbsolutePath() + "/template.ino");
+						if (templateINO.exists()) {
 							commands = new ArrayList<String>();
 							commands.add("git"); // command
 							commands.add("mv"); // command
 							commands.add("template.ino"); // command
-							commands.add(repoFullName+".ino"); // command
+							commands.add(repoFullName + ".ino"); // command
 							run(commands, cloneDir);
-							
-							
+
 							commands = new ArrayList<String>();
 							commands.add("git"); // command
 							commands.add("commit"); // command
@@ -326,19 +326,19 @@ public class LabCodeRepoSetupMain {
 							commands.add("-m'Changing ino name'"); // command
 							run(commands, cloneDir);
 						}
-						File doxyfile = new File(cloneDir.getAbsolutePath()+"/doxy.doxyfile");
-						if(doxyfile.exists()) {
+						File doxyfile = new File(cloneDir.getAbsolutePath() + "/doxy.doxyfile");
+						if (doxyfile.exists()) {
 							commands = new ArrayList<String>();
 							commands.add("doxygen"); // command
 							commands.add("doxy.doxyfile"); // command
 							run(commands, cloneDir);
-							
+
 							commands = new ArrayList<String>();
 							commands.add("git"); // command
 							commands.add("add"); // command
 							commands.add("doc/html/*"); // command
 							run(commands, cloneDir);
-							
+
 							commands = new ArrayList<String>();
 							commands.add("git"); // command
 							commands.add("commit"); // command
@@ -346,7 +346,6 @@ public class LabCodeRepoSetupMain {
 							commands.add("-mDoxygen"); // command
 							run(commands, cloneDir);
 						}
-						
 
 						// creating list of commands
 						commands = new ArrayList<String>();
@@ -360,7 +359,7 @@ public class LabCodeRepoSetupMain {
 					}
 				}
 				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
-
+				teachTeam.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 			}
 
 			System.out.println("All Students " + allStudents.size());
@@ -372,30 +371,29 @@ public class LabCodeRepoSetupMain {
 						t.delete();
 					}
 				}
-			Map<String, GHTeam> existingTeams = dest.getTeams();
-			for (GHUser u : allStudents) {
-				String hwTeam = "HomeworkTeam-" + u.getLogin();
-				String hwRepoName = "HomeworkCode-" + u.getLogin();
+			if (useHW) {
+				Map<String, GHTeam> existingTeams = dest.getTeams();
+				for (GHUser u : allStudents) {
+					String hwTeam = "HomeworkTeam-" + u.getLogin();
+					String hwRepoName = "HomeworkCode-" + u.getLogin();
 
-				GHRepository repositorie = dest.getRepository(hwRepoName);
-				if (repositorie == null) {
-					System.out.println("Creating Student Homework team " + hwRepoName);
-					repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
-				}
-				GHTeam myTeam = existingTeams.get(hwTeam);
-				if (myTeam == null) {
-					myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
+					GHRepository repositorie = dest.getRepository(hwRepoName);
+					if (repositorie == null) {
+						System.out.println("Creating Student Homework team " + hwRepoName);
+						repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
+					}
+					GHTeam myTeam = existingTeams.get(hwTeam);
+					if (myTeam == null) {
+						myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
 
-				}
-				try {
-					myTeam.add(u, Role.MAINTAINER);
-				} catch (Exception ex) {
-					System.out.println("Inviting " + u.getLogin() + " to " + hwTeam);
-				}
-				myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
-				for (GHUser t : teachingStaff) {
-					if (!t.getLogin().contains("madhephaestus"))
-						myTeam.add(t, Role.MAINTAINER);
+					}
+					try {
+						myTeam.add(u, Role.MAINTAINER);
+					} catch (Exception ex) {
+						System.out.println("Inviting " + u.getLogin() + " to " + hwTeam);
+					}
+					myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
+					teachTeam.add(repositorie, GHOrganization.Permission.ADMIN);
 				}
 			}
 		}
