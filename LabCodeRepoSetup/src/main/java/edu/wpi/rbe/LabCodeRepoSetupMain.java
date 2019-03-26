@@ -178,6 +178,9 @@ public class LabCodeRepoSetupMain {
 					continue;
 				}
 				System.out.println("Team Found: " + team.getName());
+				for(GHUser existing: team.getMembers()) {
+					team.remove(existing);
+				}
 				for (String member : members) {
 					try {
 						GHUser memberGH = github.getUser(member);
