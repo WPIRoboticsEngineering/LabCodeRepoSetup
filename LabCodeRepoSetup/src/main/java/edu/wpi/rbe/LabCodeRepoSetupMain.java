@@ -29,6 +29,9 @@ import org.kohsuke.github.PagedIterable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.neuronrobotics.bowlerstudio.scripting.PasswordManager;
+
+import javafx.stage.FileChooser.ExtensionFilter;
 
 /**
  * @author hephaestus
@@ -43,7 +46,12 @@ public class LabCodeRepoSetupMain {
 	 */
 	public static void main(String[] args) throws Exception {
 		HashSet<GHUser> allStudents = new HashSet<>();
-		String teamAssignmentsFile = args[0];
+		String path = FileSelectionFactory.GetFile(
+				new File(".")
+				,new ExtensionFilter("json file","*.JSON","*.json")
+				)
+				.getAbsolutePath();
+		String teamAssignmentsFile = path;
 		int numberOfTeams = 0;
 
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -106,7 +114,21 @@ public class LabCodeRepoSetupMain {
 			}
 		}
 
-		GitHub github = GitHub.connect();
+		
+		File workspace = new File(System.getProperty("user.home") + "/bowler-workspace/");
+	    if (!workspace.exists()) {
+	      workspace.mkdir();
+	    }
+	    try {
+			PasswordManager.loadLoginData(workspace);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		PasswordManager.login();
+		GitHub github = PasswordManager.getGithub();
+		
+		
 		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
 
 		if (dest == null) {

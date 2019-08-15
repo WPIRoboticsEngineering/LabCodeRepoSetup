@@ -3,8 +3,8 @@
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["RBE2001Code"],
 "teamDestBaseName":["RBE200xTeam"],
-"numberOfTeams":["21"],
+"numberOfTeams":["22"],
 "RBE2001Code":["WPIRoboticsEngineering","RBE2001_template"],
 
-"21": ["madhephaestus"]
+"22": ["madhephaestus"]
 }
