@@ -1,7 +1,4 @@
-/**
- * 
- */
-package edu.wpi.rbe;
+@Grab(group='org.kohsuke', module='github-api', version='1.94')
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.kohsuke.github.GHOrganization;
+import org.kohsuke.github.GHTeam.Role;
+/*
 import org.kohsuke.github.GHCreateRepositoryBuilder;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
@@ -25,31 +25,57 @@ import org.kohsuke.github.GHTeam.Role;
 import org.kohsuke.github.GHUser;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.PagedIterable;
-
+*/
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+
+import com.neuronrobotics.nrconsole.util.FileSelectionFactory;
+import javafx.stage.FileChooser.ExtensionFilter;
+
+File servo = ScriptingEngine
+	.fileFromGit(
+		"https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git",//git repo URL
+		"master",//branch
+		"LabCodeRepoSetup/teamAssignments3001.json"// File from within the Git repo
+	);
+
+def path = FileSelectionFactory.GetFile(
+	servo
+	,new ExtensionFilter("json file","*.JSON","*.json")
+	)
+	.getAbsolutePath()
+
+println path
+
+String[] arg = [path]as String[]
+
+LabCodeRepoSetup.main(arg)
+
+
 
 /**
  * @author hephaestus
  *
  */
-public class LabCodeRepoSetupMain {
+class LabCodeRepoSetup {
 
 	/**
 	 * @param args
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static void main(String[] args) throws Exception {
-		HashSet<GHUser> allStudents = new HashSet<>();
-		String teamAssignmentsFile = args[0];
+	public static void main(def argsMine) throws Exception {
+		def allStudents = new HashSet<>();
+		String teamAssignmentsFile = argsMine[0];
 		int numberOfTeams = 0;
 
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		Type collectionType = new TypeToken<HashMap<String, ArrayList<String>>>() {
 		}.getType();
-		String json = FileUtils.readFileToString(new File(teamAssignmentsFile));
+		File  fileOfStuff= new File(teamAssignmentsFile)
+		println fileOfStuff
+		String json = fileOfStuff.text
 		HashMap<String, ArrayList<String>> teamAssignments = gson.fromJson(json, collectionType);
 		String projectDestBaseName = teamAssignments.get("projectName").get(0);
 		ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
@@ -60,13 +86,13 @@ public class LabCodeRepoSetupMain {
 			useHW = Boolean.parseBoolean(teamAssignments.get("homework").get(0));
 		} catch (Throwable t) {
 		}
-		if (args.length == 2) {
-			String csvFileName = args[1];
+		if (argsMine.length == 2) {
+			String csvFileName = argsMine[1];
 			if (csvFileName.toLowerCase().endsWith(".csv")) {
 				File csv = new File(csvFileName);
 				String csvData = FileUtils.readFileToString(csv);
 				if (csv.exists()) {
-					String lines[] = csvData.split("\\r?\\n");
+					String[] lines = csvData.split("\\r?\\n");
 					int teamNum = 0;
 					ArrayList<String> team = new ArrayList<>();
 					for (String line : lines) {
@@ -106,8 +132,8 @@ public class LabCodeRepoSetupMain {
 			}
 		}
 
-		GitHub github = GitHub.connect();
-		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
+		def github = PasswordManager.getGithub();
+		def dest = github.getMyOrganizations().get(projectDestBaseName);
 
 		if (dest == null) {
 			System.out.println("FAIL, you do not have access to " + projectDestBaseName);
@@ -115,11 +141,11 @@ public class LabCodeRepoSetupMain {
 		}
 		System.out.println("Found " + projectDestBaseName);
 
-		Map<String, GHTeam> teams = dest.getTeams();
-		GHTeam teachTeam = teams.get("TeachingStaff");
-		PagedIterable<GHUser> ts = teachTeam.listMembers();
+		def teams = dest.getTeams();
+		def teachTeam = teams.get("TeachingStaff");
+		def ts = teachTeam.listMembers();
 		
-		for (GHUser t : ts) {
+		for (def t : ts) {
 			System.out.println("Teacher: " + t.getLogin());
 		}
 		boolean deleteAll = false;
@@ -127,11 +153,11 @@ public class LabCodeRepoSetupMain {
 			deleteAll = Boolean.parseBoolean(teamAssignments.get("deleteall").get(0));
 		} catch (Exception e) {
 		}
-		ArrayList<GHUser> toRemove = new ArrayList<>();
-		PagedIterable<GHUser> currentMembers = dest.listMembers();
-		for (GHUser c : currentMembers) {
+		def toRemove = new ArrayList<>();
+		def currentMembers = dest.listMembers();
+		for (def c : currentMembers) {
 			boolean isTeach = false;
-			for (GHUser t : teachTeam.listMembers()) {
+			for (def t : teachTeam.listMembers()) {
 				if (t.getLogin().contains(c.getLogin()) || t.getLogin().contains("madhephaestus")) {
 					isTeach = true;
 					break;
@@ -141,7 +167,7 @@ public class LabCodeRepoSetupMain {
 				toRemove.add(c);
 			}
 		}
-		for (GHUser f : toRemove) {
+		for (def f : toRemove) {
 			System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
 			dest.remove(f);
 		}
@@ -149,8 +175,8 @@ public class LabCodeRepoSetupMain {
 			String repoDestBaseName = repoDestBaseNames.get(x);
 			if (deleteAll) {
 				System.out.println("Deleteall flag in json file set, hosing all repos");
-				PagedIterable<GHRepository> repos = dest.listRepositories();
-				for (GHRepository R : repos) {
+				def repos = dest.listRepositories();
+				for (def R : repos) {
 					if (R.getFullName().contains(repoDestBaseName) || R.getFullName().contains("HomeworkCode")) {
 						System.out.println("Deleting stale Repo " + R.getFullName());
 						R.delete();
@@ -166,7 +192,7 @@ public class LabCodeRepoSetupMain {
 
 			for (int i = 1; i <= numberOfTeams; i++) {
 				String teamString = i > 9 ? "" + i : "0" + i;
-				GHTeam team = teams.get(teamDestBaseName + teamString);
+				def team = teams.get(teamDestBaseName + teamString);
 
 				if (team == null) {
 					System.out.println("ERROR: no such team " + teamDestBaseName + teamString);
@@ -178,12 +204,12 @@ public class LabCodeRepoSetupMain {
 					continue;
 				}
 				System.out.println("Team Found: " + team.getName());
-				for(GHUser existing: team.getMembers()) {
+				for(def existing: team.getMembers()) {
 					team.remove(existing);
 				}
 				for (String member : members) {
 					try {
-						GHUser memberGH = github.getUser(member);
+						def memberGH = github.getUser(member);
 						if (memberGH == null) {
 							System.out.println("ERROR GitHub user " + member + " does not exist");
 							continue;
@@ -207,7 +233,7 @@ public class LabCodeRepoSetupMain {
 				if (team.hasMember(github.getUser("madhephaestus")))
 					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
 				String repoFullName = repoDestBaseName + teamString;
-				GHRepository myTeamRepo = dest.getRepository(repoFullName);
+				def myTeamRepo = dest.getRepository(repoFullName);
 
 				if (myTeamRepo == null) {
 					System.out.println("Missing Repo, creating " + repoFullName);
@@ -366,26 +392,26 @@ public class LabCodeRepoSetupMain {
 			}
 
 			System.out.println("All Students " + allStudents.size());
-			PagedIterable<GHTeam> allTeams = dest.listTeams();
+			def allTeams = dest.listTeams();
 			if (deleteAll)
-				for (GHTeam t : allTeams) {
+				for (def t : allTeams) {
 					if (t.getName().startsWith("HomeworkTeam")) {
 						System.out.println("Deleting team " + t.getName());
 						t.delete();
 					}
 				}
 			if (useHW) {
-				Map<String, GHTeam> existingTeams = dest.getTeams();
-				for (GHUser u : allStudents) {
+				def existingTeams = dest.getTeams();
+				for (def u : allStudents) {
 					String hwTeam = "HomeworkTeam-" + u.getLogin();
 					String hwRepoName = "HomeworkCode-" + u.getLogin();
 
-					GHRepository repositorie = dest.getRepository(hwRepoName);
+					def repositorie = dest.getRepository(hwRepoName);
 					if (repositorie == null) {
 						System.out.println("Creating Student Homework team " + hwRepoName);
 						repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
 					}
-					GHTeam myTeam = existingTeams.get(hwTeam);
+					def myTeam = existingTeams.get(hwTeam);
 					if (myTeam == null) {
 						myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
 
@@ -434,9 +460,9 @@ public class LabCodeRepoSetupMain {
 			;
 	}
 
-	public static GHRepository createRepository(GHOrganization dest, String repoName, String description)
+	public static def createRepository(def dest, String repoName, String description)
 			throws IOException {
-		GHCreateRepositoryBuilder builder;
+		def builder;
 
 		builder = dest.createRepository(repoName);
 
