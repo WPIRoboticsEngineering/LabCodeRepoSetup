@@ -6,7 +6,10 @@ Use the Github API to set up a set of repositories. The program will delete old 
 Modify a JSON file with this terms data. If the students from the previous term are all done with thier repos, set the deleteall flag in the JSON.
 
 ## Run
-Open the project in Eclipse or other IDE as a Gradle project.
+
+Download the jar file from here:
+
+https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup/releases
 
 Run LabCodeRepoSetupMain with a json file as arguments to set up repos for the start of term
 
