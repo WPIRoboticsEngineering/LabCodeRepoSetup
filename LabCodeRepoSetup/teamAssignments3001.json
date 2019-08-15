@@ -1,8 +1,8 @@
 {
-"deleteall":["false"],
+"deleteall":["true"],
 "projectName":["RBE300X-Lab"],
 "repoDestBaseNames":["RBE3001_nucleo_firmware","RBE3001_Matlab"],
 "teamDestBaseName":["RBE300xTEAM"],
 "numberOfTeams":["20"],
-"20": ["ilpincy"]
+"20": ["madhephaestus","zhyma","acamilo"]
 }
