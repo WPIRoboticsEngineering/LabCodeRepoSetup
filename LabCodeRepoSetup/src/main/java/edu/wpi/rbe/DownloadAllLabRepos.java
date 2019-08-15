@@ -34,7 +34,8 @@ public class DownloadAllLabRepos {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
-		String teamAssignmentsFile = args[0];
+		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(args);
+		GitHub github = LabCodeRepoSetupMain.getGithub();
 		int numberOfTeams = 0;
 
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -46,7 +47,6 @@ public class DownloadAllLabRepos {
 		ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
 		numberOfTeams = Integer.parseInt(teamAssignments.get("numberOfTeams").get(0));
 
-		GitHub github = GitHub.connect();
 		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
 
 		if (dest == null) {
@@ -94,7 +94,7 @@ public class DownloadAllLabRepos {
 				}
 			}
 		}
-
+		System.exit(0);
 	}
 
 }

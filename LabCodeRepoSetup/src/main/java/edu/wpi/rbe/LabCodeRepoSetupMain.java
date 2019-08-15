@@ -46,12 +46,11 @@ public class LabCodeRepoSetupMain {
 	 */
 	public static void main(String[] args) throws Exception {
 		HashSet<GHUser> allStudents = new HashSet<>();
-		String path = FileSelectionFactory.GetFile(
-				new File(".")
-				,new ExtensionFilter("json file","*.JSON","*.json")
-				)
-				.getAbsolutePath();
-		String teamAssignmentsFile = path;
+		
+		
+		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(args);
+		GitHub github = LabCodeRepoSetupMain.getGithub();
+		
 		int numberOfTeams = 0;
 
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -114,20 +113,6 @@ public class LabCodeRepoSetupMain {
 			}
 		}
 
-		
-		File workspace = new File(System.getProperty("user.home") + "/bowler-workspace/");
-	    if (!workspace.exists()) {
-	      workspace.mkdir();
-	    }
-	    try {
-			PasswordManager.loadLoginData(workspace);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		PasswordManager.login();
-		GitHub github = PasswordManager.getGithub();
-		
 		
 		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
 
@@ -422,7 +407,38 @@ public class LabCodeRepoSetupMain {
 				}
 			}
 		}
+		System.exit(0);
+	}
 
+	public static String getTeamAssignmentFile(String[] args) {
+		@SuppressWarnings("restriction")
+		String path = FileSelectionFactory.GetFile(
+				new File(".")
+				,new ExtensionFilter("json file","*.JSON","*.json")
+				)
+				.getAbsolutePath();
+		String teamAssignmentsFile;
+		if(args.length==0)
+			teamAssignmentsFile= path;
+		else
+			teamAssignmentsFile=args[0];
+		return teamAssignmentsFile;
+	}
+
+	public static GitHub getGithub() throws IOException {
+		File workspace = new File(System.getProperty("user.home") + "/bowler-workspace/");
+	    if (!workspace.exists()) {
+	      workspace.mkdir();
+	    }
+	    try {
+			PasswordManager.loadLoginData(workspace);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		PasswordManager.login();
+		GitHub github = PasswordManager.getGithub();
+		return github;
 	}
 
 	public static void run(List<String> commands, File dir) throws Exception {
