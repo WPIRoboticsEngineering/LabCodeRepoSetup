@@ -46,11 +46,10 @@ public class LabCodeRepoSetupMain {
 	 */
 	public static void main(String[] arg) throws Exception {
 		HashSet<GHUser> allStudents = new HashSet<>();
-		
-		
+
 		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(arg);
 		GitHub github = LabCodeRepoSetupMain.getGithub();
-		
+
 		int numberOfTeams = 0;
 
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
@@ -113,7 +112,6 @@ public class LabCodeRepoSetupMain {
 			}
 		}
 
-		
 		GHOrganization dest = github.getMyOrganizations().get(projectDestBaseName);
 
 		if (dest == null) {
@@ -125,7 +123,7 @@ public class LabCodeRepoSetupMain {
 		Map<String, GHTeam> teams = dest.getTeams();
 		GHTeam teachTeam = teams.get("TeachingStaff");
 		List<GHUser> ts = teachTeam.listMembers().asList();
-		
+
 		for (GHUser t : ts) {
 			System.out.println("Teacher: " + t.getLogin());
 		}
@@ -136,22 +134,19 @@ public class LabCodeRepoSetupMain {
 		}
 		ArrayList<GHUser> toRemove = new ArrayList<>();
 		List<GHUser> currentMembers = dest.listMembers().asList();
-		if(deleteAll) {
+		if (deleteAll) {
 			for (GHUser c : currentMembers) {
 				boolean isTeach = false;
 				String login = c.getLogin();
-				System.out.print("\r\nMember "+login);
-				for (GHUser t :ts) {
+				for (GHUser t : ts) {
 					String loginTeamMember = t.getLogin();
 					if (loginTeamMember.contentEquals(login) || login.contentEquals("madhephaestus")) {
 						isTeach = true;
-						System.out.print(" is teacher "+loginTeamMember);
 						break;
 					}
 				}
 				if (!isTeach) {
 					toRemove.add(c);
-					System.out.print(" to remove");
 				}
 			}
 			for (GHUser f : toRemove) {
@@ -175,27 +170,37 @@ public class LabCodeRepoSetupMain {
 			}
 			System.out.println("Looking for source information for " + repoDestBaseName);
 			File cloneDir = null;
-			String cloneDirString = "";
-			String sourceURL = null;// "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
+//			String cloneDirString = "";
+//			String sourceURL = null;// "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
 
 			for (int i = 1; i <= numberOfTeams; i++) {
 				String teamString = i > 9 ? "" + i : "0" + i;
-				GHTeam team = teams.get(teamDestBaseName + teamString);
+				String teamnameString = teamDestBaseName + teamString;
+				GHTeam team = teams.get(teamnameString);
 
-				if (team == null) {
-					System.out.println("ERROR: no such team " + teamDestBaseName + teamString);
+				if (team != null) {
 					
-					continue;
+					System.out.println("Team Found: " + team.getName());
+					for (GHUser existing : team.getMembers()) {
+						team.remove(existing);
+					}
 				}
 				ArrayList<String> members = teamAssignments.get(teamString);
 				if (members == null) {
 					System.out.println("ERROR: Team has no members in JSON " + teamString);
 					continue;
 				}
-				System.out.println("Team Found: " + team.getName());
-				for(GHUser existing: team.getMembers()) {
-					team.remove(existing);
+				String repoFullName = repoDestBaseName + teamString;
+				GHRepository myTeamRepo = dest.getRepository(repoFullName);
+
+				if (myTeamRepo == null) {
+					myTeamRepo = createTeamRepo(teamAssignments, projectDestBaseName, dest, repoDestBaseName, cloneDir,
+							teamString, repoFullName);
 				}
+				if(team==null){
+					team=dest.createTeam(teamnameString, GHOrganization.Permission.ADMIN, myTeamRepo);
+				}
+				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 				for (String member : members) {
 					try {
 						GHUser memberGH = github.getUser(member);
@@ -212,172 +217,11 @@ public class LabCodeRepoSetupMain {
 
 							}
 						}
-
 						allStudents.add(memberGH);
 					} catch (Exception ex) {
 						System.err.println("\r\n\r\n ERROR " + member + " is not a valid GitHub username\r\n\r\n");
 					}
 				}
-
-				if (team.hasMember(github.getUser("madhephaestus")))
-					team.remove(github.getUser("madhephaestus"));// FFS i dont want all these notifications...
-				String repoFullName = repoDestBaseName + teamString;
-				GHRepository myTeamRepo = dest.getRepository(repoFullName);
-
-				if (myTeamRepo == null) {
-					System.out.println("Missing Repo, creating " + repoFullName);
-					myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
-					
-					while (dest.getRepository(repoFullName) == null) {
-						System.out.println("Waiting for the creation of " + repoFullName);
-						Thread.sleep(1000);
-					}
-					try {
-						String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
-						String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
-						if (sourceProj != null && sourceRepo != null) {
-							sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
-
-							File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
-							if (!tmp.exists()) {
-								tmp.mkdirs();
-							}
-							tmp.deleteOnExit();
-							cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
-							cloneDir = new File(cloneDirString);
-							if (cloneDir.exists()) {
-
-								System.out.println(cloneDir.getAbsolutePath() + " Exists");
-								List<String> commands = new ArrayList<String>();
-
-								commands = new ArrayList<String>();
-								commands.add("rm"); // command
-								commands.add("-rf"); // command
-								commands.add(cloneDir.getAbsolutePath()); // command
-								run(commands, tmp);
-
-								commands = new ArrayList<String>();
-								commands.add("cp"); // command
-								commands.add("-R"); // command
-								commands.add(sourceRepo + "TMP"); // command
-								commands.add(sourceRepo); // command
-								run(commands, tmp);
-
-								commands = new ArrayList<String>();
-								commands.add("git"); // command
-								commands.add("remote"); // command
-								commands.add("set-url"); // command
-								commands.add("origin"); // command
-								commands.add(sourceURL); // command
-								run(commands, cloneDir);
-								commands = new ArrayList<String>();
-								commands.add("git"); // command
-								commands.add("pull"); // command
-								commands.add("origin"); // command
-								commands.add("master"); // command
-								run(commands, cloneDir);
-							} else {
-								System.out.println("Cloning " + sourceURL);
-								System.out.println("Cloning to " + sourceRepo);
-								// creating list of commands
-								List<String> commands = new ArrayList<String>();
-								commands.add("git"); // command
-								commands.add("clone"); // command
-								commands.add(sourceURL); // command
-								run(commands, tmp);
-
-								cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
-
-								commands = new ArrayList<String>();
-								commands.add("cp"); // command
-								commands.add("-R"); // command
-								commands.add(sourceRepo); // command
-								commands.add(sourceRepo + "TMP"); // command
-								run(commands, tmp);
-
-							}
-
-						}
-					} catch (Exception e) {
-						System.out.println("No source project found, leaving repos blank");
-					}
-					if (cloneDir != null && cloneDir.exists()) {
-						// creating list of commands
-						List<String> commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("remote"); // command
-						commands.add("set-url"); // command
-						commands.add("origin"); // command
-						commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
-						run(commands, cloneDir);
-
-						commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("checkout"); // command
-						commands.add("master"); // command
-						run(commands, cloneDir);
-
-						commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("remote"); // command
-						commands.add("-v"); // command
-						run(commands, cloneDir);
-
-						commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("config"); // command
-						commands.add("-l"); // command
-						run(commands, cloneDir);
-
-						File templateINO = new File(cloneDir.getAbsolutePath() + "/template.ino");
-						if (templateINO.exists()) {
-							commands = new ArrayList<String>();
-							commands.add("git"); // command
-							commands.add("mv"); // command
-							commands.add("template.ino"); // command
-							commands.add(repoFullName + ".ino"); // command
-							run(commands, cloneDir);
-
-							commands = new ArrayList<String>();
-							commands.add("git"); // command
-							commands.add("commit"); // command
-							commands.add("-a"); // command
-							commands.add("-m'Changing ino name'"); // command
-							run(commands, cloneDir);
-						}
-						File doxyfile = new File(cloneDir.getAbsolutePath() + "/doxy.doxyfile");
-						if (doxyfile.exists()) {
-							commands = new ArrayList<String>();
-							commands.add("doxygen"); // command
-							commands.add("doxy.doxyfile"); // command
-							run(commands, cloneDir);
-
-							commands = new ArrayList<String>();
-							commands.add("git"); // command
-							commands.add("add"); // command
-							commands.add("doc/html/*"); // command
-							run(commands, cloneDir);
-
-							commands = new ArrayList<String>();
-							commands.add("git"); // command
-							commands.add("commit"); // command
-							commands.add("-a"); // command
-							commands.add("-mDoxygen"); // command
-							run(commands, cloneDir);
-						}
-
-						// creating list of commands
-						commands = new ArrayList<String>();
-						commands.add("git"); // command
-						commands.add("push"); // command
-						commands.add("-u"); // command
-						commands.add("origin"); // command
-						commands.add("master"); // command
-						run(commands, cloneDir);
-
-					}
-				}
-				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 				teachTeam.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 			}
 
@@ -419,29 +263,185 @@ public class LabCodeRepoSetupMain {
 		System.exit(0);
 	}
 
+	private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> teamAssignments,
+			String projectDestBaseName, GHOrganization dest, String repoDestBaseName, File cloneDir, String teamString,
+			String repoFullName) throws IOException, InterruptedException, Exception {
+		String cloneDirString;
+		String sourceURL;
+		GHRepository myTeamRepo;
+		System.out.println("Missing Repo, creating " + repoFullName);
+		myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
+
+		while (dest.getRepository(repoFullName) == null) {
+			System.out.println("Waiting for the creation of " + repoFullName);
+			Thread.sleep(1000);
+		}
+		try {
+			String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
+			String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
+			if (sourceProj != null && sourceRepo != null) {
+				sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
+
+				File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
+				if (!tmp.exists()) {
+					tmp.mkdirs();
+				}
+				tmp.deleteOnExit();
+				cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
+				cloneDir = new File(cloneDirString);
+				if (cloneDir.exists()) {
+
+					System.out.println(cloneDir.getAbsolutePath() + " Exists");
+					List<String> commands = new ArrayList<String>();
+
+					commands = new ArrayList<String>();
+					commands.add("rm"); // command
+					commands.add("-rf"); // command
+					commands.add(cloneDir.getAbsolutePath()); // command
+					run(commands, tmp);
+
+					commands = new ArrayList<String>();
+					commands.add("cp"); // command
+					commands.add("-R"); // command
+					commands.add(sourceRepo + "TMP"); // command
+					commands.add(sourceRepo); // command
+					run(commands, tmp);
+
+					commands = new ArrayList<String>();
+					commands.add("git"); // command
+					commands.add("remote"); // command
+					commands.add("set-url"); // command
+					commands.add("origin"); // command
+					commands.add(sourceURL); // command
+					run(commands, cloneDir);
+					commands = new ArrayList<String>();
+					commands.add("git"); // command
+					commands.add("pull"); // command
+					commands.add("origin"); // command
+					commands.add("master"); // command
+					run(commands, cloneDir);
+				} else {
+					System.out.println("Cloning " + sourceURL);
+					System.out.println("Cloning to " + sourceRepo);
+					// creating list of commands
+					List<String> commands = new ArrayList<String>();
+					commands.add("git"); // command
+					commands.add("clone"); // command
+					commands.add(sourceURL); // command
+					run(commands, tmp);
+
+					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
+
+					commands = new ArrayList<String>();
+					commands.add("cp"); // command
+					commands.add("-R"); // command
+					commands.add(sourceRepo); // command
+					commands.add(sourceRepo + "TMP"); // command
+					run(commands, tmp);
+
+				}
+
+			}
+		} catch (Exception e) {
+			System.out.println("No source project found, leaving repos blank");
+		}
+		if (cloneDir != null && cloneDir.exists()) {
+			// creating list of commands
+			List<String> commands = new ArrayList<String>();
+			commands.add("git"); // command
+			commands.add("remote"); // command
+			commands.add("set-url"); // command
+			commands.add("origin"); // command
+			commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
+			run(commands, cloneDir);
+
+			commands = new ArrayList<String>();
+			commands.add("git"); // command
+			commands.add("checkout"); // command
+			commands.add("master"); // command
+			run(commands, cloneDir);
+
+			commands = new ArrayList<String>();
+			commands.add("git"); // command
+			commands.add("remote"); // command
+			commands.add("-v"); // command
+			run(commands, cloneDir);
+
+			commands = new ArrayList<String>();
+			commands.add("git"); // command
+			commands.add("config"); // command
+			commands.add("-l"); // command
+			run(commands, cloneDir);
+
+			File templateINO = new File(cloneDir.getAbsolutePath() + "/template.ino");
+			if (templateINO.exists()) {
+				commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("mv"); // command
+				commands.add("template.ino"); // command
+				commands.add(repoFullName + ".ino"); // command
+				run(commands, cloneDir);
+
+				commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("commit"); // command
+				commands.add("-a"); // command
+				commands.add("-m'Changing ino name'"); // command
+				run(commands, cloneDir);
+			}
+			File doxyfile = new File(cloneDir.getAbsolutePath() + "/doxy.doxyfile");
+			if (doxyfile.exists()) {
+				commands = new ArrayList<String>();
+				commands.add("doxygen"); // command
+				commands.add("doxy.doxyfile"); // command
+				run(commands, cloneDir);
+
+				commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("add"); // command
+				commands.add("doc/html/*"); // command
+				run(commands, cloneDir);
+
+				commands = new ArrayList<String>();
+				commands.add("git"); // command
+				commands.add("commit"); // command
+				commands.add("-a"); // command
+				commands.add("-mDoxygen"); // command
+				run(commands, cloneDir);
+			}
+
+			// creating list of commands
+			commands = new ArrayList<String>();
+			commands.add("git"); // command
+			commands.add("push"); // command
+			commands.add("-u"); // command
+			commands.add("origin"); // command
+			commands.add("master"); // command
+			run(commands, cloneDir);
+
+		}
+		return myTeamRepo;
+	}
+
 	public static String getTeamAssignmentFile(String[] args) {
 		@SuppressWarnings("restriction")
-		
+
 		String teamAssignmentsFile;
-		if(args.length==0) {
-			String path = FileSelectionFactory.GetFile(
-					new File(".")
-					,new ExtensionFilter("json file","*.JSON","*.json")
-					)
-					.getAbsolutePath();
-			teamAssignmentsFile= path;
-		}
-		else
-			teamAssignmentsFile=args[0];
+		if (args.length == 0) {
+			String path = FileSelectionFactory
+					.GetFile(new File("."), new ExtensionFilter("json file", "*.JSON", "*.json")).getAbsolutePath();
+			teamAssignmentsFile = path;
+		} else
+			teamAssignmentsFile = args[0];
 		return teamAssignmentsFile;
 	}
 
 	public static GitHub getGithub() throws IOException {
 		File workspace = new File(System.getProperty("user.home") + "/bowler-workspace/");
-	    if (!workspace.exists()) {
-	      workspace.mkdir();
-	    }
-	    try {
+		if (!workspace.exists()) {
+			workspace.mkdir();
+		}
+		try {
 			PasswordManager.loadLoginData(workspace);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
