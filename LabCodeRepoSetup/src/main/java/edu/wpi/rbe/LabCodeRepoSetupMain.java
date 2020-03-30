@@ -122,38 +122,94 @@ public class LabCodeRepoSetupMain {
 
 		Map<String, GHTeam> teams = dest.getTeams();
 		GHTeam teachTeam = teams.get("TeachingStaff");
-		List<GHUser> ts = teachTeam.listMembers().asList();
-
-		for (GHUser t : ts) {
-			System.out.println("Teacher: " + t.getLogin());
-		}
+		
 		boolean deleteAll = false;
 		try {
 			deleteAll = Boolean.parseBoolean(teamAssignments.get("deleteall").get(0));
 		} catch (Exception e) {
 		}
+		
+
+		processAllRepositories(allStudents, github, numberOfTeams, teamAssignments, projectDestBaseName, repoDestBaseNames,
+				teamDestBaseName, dest, teams, teachTeam, deleteAll);
+		if (useHW) {
+			createHomeWorkRepos(allStudents, dest, teachTeam);
+		}
+		if (deleteAll) {
+			deleteAllNonCurrentUsers(allStudents, dest);
+		}
+		System.exit(0);
+	}
+
+	private static void deleteAllNonCurrentUsers(HashSet<GHUser> allStudents, GHOrganization dest)
+			throws IOException {
+		GHTeam teachTeam = dest.getTeamByName("TeachingStaff");
+		List<GHUser> ts = teachTeam.listMembers().asList();
+
+		for (GHUser t : ts) {
+			System.out.println("Teacher: " + t.getLogin());
+		}
 		ArrayList<GHUser> toRemove = new ArrayList<>();
 		List<GHUser> currentMembers = dest.listMembers().asList();
-		if (deleteAll) {
-			for (GHUser c : currentMembers) {
-				boolean isTeach = false;
-				String login = c.getLogin();
-				for (GHUser t : ts) {
-					String loginTeamMember = t.getLogin();
-					if (loginTeamMember.contentEquals(login) || login.contentEquals("madhephaestus")) {
-						isTeach = true;
-						break;
-					}
-				}
-				if (!isTeach) {
-					toRemove.add(c);
+		for (GHUser c : currentMembers) {
+			boolean toKeep = false;
+			String usernameOfCurrentMember = c.getLogin();
+			for (GHUser t : ts) {
+				String loginTeamMember = t.getLogin();
+				if (loginTeamMember.contentEquals(usernameOfCurrentMember) || usernameOfCurrentMember.contentEquals("madhephaestus")) {
+					toKeep = true;
+					break;
 				}
 			}
-			for (GHUser f : toRemove) {
-				System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
-				dest.remove(f);
+			for (GHUser t : allStudents)  {
+				String loginTeamMember = t.getLogin();
+				if (loginTeamMember.contentEquals(usernameOfCurrentMember)) {
+					toKeep = true;
+					break;
+				}
+			}
+			if (!toKeep) {
+				toRemove.add(c);
 			}
 		}
+		for (GHUser f : toRemove) {
+			System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
+			dest.remove(f);
+		}
+	}
+
+	private static void createHomeWorkRepos(HashSet<GHUser> allStudents, GHOrganization dest, GHTeam teachTeam)
+			throws IOException {
+		Map<String, GHTeam> existingTeams = dest.getTeams();
+		for (GHUser u : allStudents) {
+			String hwTeam = "HomeworkTeam-" + u.getLogin();
+			String hwRepoName = "HomeworkCode-" + u.getLogin();
+
+			GHRepository repositorie = dest.getRepository(hwRepoName);
+			if (repositorie == null) {
+				System.out.println("Creating Student Homework team " + hwRepoName);
+				repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
+			}
+			GHTeam myTeam = existingTeams.get(hwTeam);
+			if (myTeam == null) {
+				myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
+
+			}
+			try {
+				myTeam.add(u, Role.MAINTAINER);
+			} catch (Exception ex) {
+				System.out.println("Inviting " + u.getLogin() + " to " + hwTeam);
+			}
+			myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
+			teachTeam.add(repositorie, GHOrganization.Permission.ADMIN);
+		}
+	}
+
+	private static void processAllRepositories(HashSet<GHUser> allStudents, GitHub github, int numberOfTeams,
+			HashMap<String, ArrayList<String>> teamAssignments, String projectDestBaseName,
+			ArrayList<String> repoDestBaseNames, String teamDestBaseName, GHOrganization dest,
+			Map<String, GHTeam> teams, GHTeam teachTeam, boolean deleteAll)
+			throws IOException, InterruptedException, Exception {
 		for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String repoDestBaseName = repoDestBaseNames.get(x);
 			if (deleteAll) {
@@ -179,7 +235,7 @@ public class LabCodeRepoSetupMain {
 				GHTeam team = teams.get(teamnameString);
 
 				if (team != null) {
-					
+
 					System.out.println("Team Found: " + team.getName());
 					for (GHUser existing : team.getMembers()) {
 						team.remove(existing);
@@ -197,8 +253,8 @@ public class LabCodeRepoSetupMain {
 					myTeamRepo = createTeamRepo(teamAssignments, projectDestBaseName, dest, repoDestBaseName, cloneDir,
 							teamString, repoFullName);
 				}
-				if(team==null){
-					team=dest.createTeam(teamnameString, GHOrganization.Permission.ADMIN, myTeamRepo);
+				if (team == null) {
+					team = dest.createTeam(teamnameString, GHOrganization.Permission.ADMIN, myTeamRepo);
 				}
 				team.add(myTeamRepo, GHOrganization.Permission.ADMIN);
 				for (String member : members) {
@@ -234,33 +290,8 @@ public class LabCodeRepoSetupMain {
 						t.delete();
 					}
 				}
-			if (useHW) {
-				Map<String, GHTeam> existingTeams = dest.getTeams();
-				for (GHUser u : allStudents) {
-					String hwTeam = "HomeworkTeam-" + u.getLogin();
-					String hwRepoName = "HomeworkCode-" + u.getLogin();
-
-					GHRepository repositorie = dest.getRepository(hwRepoName);
-					if (repositorie == null) {
-						System.out.println("Creating Student Homework team " + hwRepoName);
-						repositorie = createRepository(dest, hwRepoName, "Homework for " + u.getLogin());
-					}
-					GHTeam myTeam = existingTeams.get(hwTeam);
-					if (myTeam == null) {
-						myTeam = dest.createTeam(hwTeam, GHOrganization.Permission.ADMIN, repositorie);
-
-					}
-					try {
-						myTeam.add(u, Role.MAINTAINER);
-					} catch (Exception ex) {
-						System.out.println("Inviting " + u.getLogin() + " to " + hwTeam);
-					}
-					myTeam.add(repositorie, GHOrganization.Permission.ADMIN);
-					teachTeam.add(repositorie, GHOrganization.Permission.ADMIN);
-				}
-			}
+			
 		}
-		System.exit(0);
 	}
 
 	private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> teamAssignments,
