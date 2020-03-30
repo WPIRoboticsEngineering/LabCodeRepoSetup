@@ -44,11 +44,11 @@ public class LabCodeRepoSetupMain {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] arg) throws Exception {
 		HashSet<GHUser> allStudents = new HashSet<>();
 		
 		
-		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(args);
+		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(arg);
 		GitHub github = LabCodeRepoSetupMain.getGithub();
 		
 		int numberOfTeams = 0;
@@ -67,8 +67,8 @@ public class LabCodeRepoSetupMain {
 			useHW = Boolean.parseBoolean(teamAssignments.get("homework").get(0));
 		} catch (Throwable t) {
 		}
-		if (args.length == 2) {
-			String csvFileName = args[1];
+		if (arg.length == 2) {
+			String csvFileName = arg[1];
 			if (csvFileName.toLowerCase().endsWith(".csv")) {
 				File csv = new File(csvFileName);
 				String csvData = FileUtils.readFileToString(csv);
@@ -124,7 +124,7 @@ public class LabCodeRepoSetupMain {
 
 		Map<String, GHTeam> teams = dest.getTeams();
 		GHTeam teachTeam = teams.get("TeachingStaff");
-		PagedIterable<GHUser> ts = teachTeam.listMembers();
+		List<GHUser> ts = teachTeam.listMembers().asList();
 		
 		for (GHUser t : ts) {
 			System.out.println("Teacher: " + t.getLogin());
@@ -135,22 +135,29 @@ public class LabCodeRepoSetupMain {
 		} catch (Exception e) {
 		}
 		ArrayList<GHUser> toRemove = new ArrayList<>();
-		PagedIterable<GHUser> currentMembers = dest.listMembers();
-		for (GHUser c : currentMembers) {
-			boolean isTeach = false;
-			for (GHUser t : teachTeam.listMembers()) {
-				if (t.getLogin().contains(c.getLogin()) || t.getLogin().contains("madhephaestus")) {
-					isTeach = true;
-					break;
+		List<GHUser> currentMembers = dest.listMembers().asList();
+		if(deleteAll) {
+			for (GHUser c : currentMembers) {
+				boolean isTeach = false;
+				String login = c.getLogin();
+				System.out.print("\r\nMember "+login);
+				for (GHUser t :ts) {
+					String loginTeamMember = t.getLogin();
+					if (loginTeamMember.contentEquals(login) || login.contentEquals("madhephaestus")) {
+						isTeach = true;
+						System.out.print(" is teacher "+loginTeamMember);
+						break;
+					}
+				}
+				if (!isTeach) {
+					toRemove.add(c);
+					System.out.print(" to remove");
 				}
 			}
-			if (!isTeach) {
-				toRemove.add(c);
+			for (GHUser f : toRemove) {
+				System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
+				dest.remove(f);
 			}
-		}
-		for (GHUser f : toRemove) {
-			System.out.println("Removing " + f.getLogin() + " from " + dest.getName());
-			dest.remove(f);
 		}
 		for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String repoDestBaseName = repoDestBaseNames.get(x);
@@ -177,6 +184,7 @@ public class LabCodeRepoSetupMain {
 
 				if (team == null) {
 					System.out.println("ERROR: no such team " + teamDestBaseName + teamString);
+					
 					continue;
 				}
 				ArrayList<String> members = teamAssignments.get(teamString);
@@ -219,6 +227,7 @@ public class LabCodeRepoSetupMain {
 				if (myTeamRepo == null) {
 					System.out.println("Missing Repo, creating " + repoFullName);
 					myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
+					
 					while (dest.getRepository(repoFullName) == null) {
 						System.out.println("Waiting for the creation of " + repoFullName);
 						Thread.sleep(1000);
@@ -412,14 +421,16 @@ public class LabCodeRepoSetupMain {
 
 	public static String getTeamAssignmentFile(String[] args) {
 		@SuppressWarnings("restriction")
-		String path = FileSelectionFactory.GetFile(
-				new File(".")
-				,new ExtensionFilter("json file","*.JSON","*.json")
-				)
-				.getAbsolutePath();
+		
 		String teamAssignmentsFile;
-		if(args.length==0)
+		if(args.length==0) {
+			String path = FileSelectionFactory.GetFile(
+					new File(".")
+					,new ExtensionFilter("json file","*.JSON","*.json")
+					)
+					.getAbsolutePath();
 			teamAssignmentsFile= path;
+		}
 		else
 			teamAssignmentsFile=args[0];
 		return teamAssignmentsFile;
