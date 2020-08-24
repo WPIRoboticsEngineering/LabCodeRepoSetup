@@ -529,5 +529,4 @@ public class LabCodeRepoSetupMain {
 
 }
 
-LabCodeRepoSetupMain.main(args)
 
