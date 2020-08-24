@@ -13,7 +13,6 @@ https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup/releases
 
 Run LabCodeRepoSetupMain with a json file as arguments to set up repos for the start of term
 
-Run LabCodeRepoSetupMain with a json file and a csv file as arguments to set up repos for the start of term by parsing the csv for the student-team mapping. CAUTION this is brittle, the json is more stable.
 
 Run DownloadAllLabRepos with a json file as arguments to download all Lab repos for grading
 
