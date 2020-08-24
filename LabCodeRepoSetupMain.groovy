@@ -123,13 +123,19 @@ public class FileSelectionFactory {
 	}
 
 }
+public String readFileToString(File f){
+
+    String fileContent = f.text
+    return fileContent
+	
+}
 
 	/**
 	 * @param args
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	public static void start() throws Exception {
+	public void start() throws Exception {
 
 		
 		def arg=[] as String[]
@@ -137,6 +143,7 @@ public class FileSelectionFactory {
 		HashSet<GHUser> allStudents = new HashSet<>();
 
 		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(arg);
+		println "Loading file "+teamAssignmentsFile
 		GitHub github = LabCodeRepoSetupMain.getGithub();
 
 		int numberOfTeams = 0;
@@ -144,7 +151,7 @@ public class FileSelectionFactory {
 		Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 		Type collectionType = new TypeToken<HashMap<String, ArrayList<String>>>() {
 		}.getType();
-		String json = FileUtils.readFileToString(new File(teamAssignmentsFile));
+		String json = readFileToString(new File(teamAssignmentsFile));
 		HashMap<String, ArrayList<String>> teamAssignments = gson.fromJson(json, collectionType);
 		String projectDestBaseName = teamAssignments.get("projectName").get(0);
 		ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
