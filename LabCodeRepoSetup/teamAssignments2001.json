@@ -1,8 +1,10 @@
 {
-"deleteall":["true"],
-"homework":["false"],
+"deleteall":["false"],
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["RBE2001Code"],
 "teamDestBaseName":["RBE200xTeam"],
-"numberOfTeams":["22"]
+"numberOfTeams":["22"],
+"RBE2001Code":["WPIRoboticsEngineering","RBE2001_template"],
+
+"22": ["madhephaestus"]
 }
