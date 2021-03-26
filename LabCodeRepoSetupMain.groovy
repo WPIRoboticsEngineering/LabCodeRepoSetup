@@ -32,6 +32,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.neuronrobotics.bowlerstudio.scripting.PasswordManager;
+import com.neuronrobotics.bowlerstudio.scripting.ScriptingEngine
 
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -511,7 +512,7 @@ public String readFileToString(File f){
 		String teamAssignmentsFile;
 		if (a.length == 0) {
 			String p = new FileSelectionFactory().GetFile(
-				new File("."), 
+				ScriptingEngine.getRepositoryCloneDirectory("https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git"), 
 				new ExtensionFilter("json file", "*.JSON", "*.json")
 				).getAbsolutePath();
 			teamAssignmentsFile = p;
@@ -532,7 +533,7 @@ public String readFileToString(File f){
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		PasswordManager.login();
+		//PasswordManager.login();
 		GitHub github = PasswordManager.getGithub();
 		return github;
 	}
