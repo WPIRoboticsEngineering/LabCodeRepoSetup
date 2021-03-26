@@ -7,19 +7,7 @@ Modify a JSON file with this terms data. If the students from the previous term 
 
 ## Run
 
-Download the jar file from here:
-
-https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup/releases
-
-Run LabCodeRepoSetupMain with a json file as arguments to set up repos for the start of term
-
-
-Run DownloadAllLabRepos with a json file as arguments to download all Lab repos for grading
-
-Run DownloadAllHomeworkRepos with a json file as arguments to download all Homework repos for grading
-
-Run UpdateAllLabRepos with a json file as arguments to Hotfix student lab repos with changes made to the source repo.
-
+Install [BowlerStudio](https://commonwealthrobotics.com/) and Git on a Linux Machine. Watch this repo to add it to the GitHub menue in BowlerStudio. Run the groovy script and select the JSON file for setup. 
 
 # JSON Config file
 
