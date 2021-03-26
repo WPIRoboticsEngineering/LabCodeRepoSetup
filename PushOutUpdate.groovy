@@ -8,7 +8,6 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 
-import LabCodeRepoSetup.src.main.java.edu.wpi.rbe.LabCodeRepoSetupMain
 
 String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(null);
 GitHub github = LabCodeRepoSetupMain.getGithub();
