@@ -1,10 +1,10 @@
 {
-"deleteall":["true"],
+"deleteall":["false"],
 "homework":["false"],
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["2002_LabTeam_","FinalProject_2002_Team_"],
 "2002_LabTeam_":["gcl8a","rbe2002_d20"],
 "teamDestBaseName":["RBE200xTeam"],
-"numberOfTeams":["60"]
-
+"numberOfTeams":["60"],
+"60":["madhephaestus"]
 }
