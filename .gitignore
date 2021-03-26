@@ -23,4 +23,8 @@
 hs_err_pid*
 /.gradle/
 .project
-*.settings*
+*.settings*/.project
+/.classpath
+/.cproject
+/cache/
+/*.class
