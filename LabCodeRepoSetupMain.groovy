@@ -401,7 +401,7 @@ public String readFileToString(File f){
 					commands.add("git"); // command
 					commands.add("pull"); // command
 					commands.add("origin"); // command
-					commands.add("master"); // command
+					commands.add("main"); // command
 					run(commands, cloneDir);
 				} else {
 					System.out.println("Cloning " + sourceURL);
@@ -441,7 +441,7 @@ public String readFileToString(File f){
 			commands = new ArrayList<String>();
 			commands.add("git"); // command
 			commands.add("checkout"); // command
-			commands.add("master"); // command
+			commands.add("main"); // command
 			run(commands, cloneDir);
 
 			commands = new ArrayList<String>();
@@ -499,7 +499,7 @@ public String readFileToString(File f){
 			commands.add("push"); // command
 			commands.add("-u"); // command
 			commands.add("origin"); // command
-			commands.add("master"); // command
+			commands.add("main"); // command
 			run(commands, cloneDir);
 
 		}
