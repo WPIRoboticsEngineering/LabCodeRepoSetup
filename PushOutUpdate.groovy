@@ -2,6 +2,7 @@ import java.lang.reflect.Type
 
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.GHOrganization
+import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
 
 import com.google.gson.Gson
@@ -48,6 +49,13 @@ for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			
 			def URLOfStudentRepo = "https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git"
 			
+			GHRepository myTeamRepo = dest.getRepository(repoFullName);
+			
+			if (myTeamRepo == null) {
+				continue;
+			}
+			if(Thread.interrupted())
+				return;
 			ScriptingEngine.pull(URLOfStudentRepo)
 			
 			Repository repoOfStudent=ScriptingEngine.getRepository(URLOfStudentRepo)

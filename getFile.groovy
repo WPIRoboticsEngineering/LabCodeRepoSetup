@@ -90,12 +90,7 @@ public  File GetDirectory(File start) {
 }
 
 }
-public String readFileToString(File f){
 
-String fileContent = f.text
-return fileContent
-
-}
 
 public static String getTeamAssignmentFile(String[] a) {
 		if (a==null)

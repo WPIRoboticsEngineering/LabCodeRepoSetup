@@ -41,7 +41,12 @@ import javafx.stage.FileChooser.ExtensionFilter;
  *
  */
 
-
+public String readFileToString(File f){
+	
+	String fileContent = f.text
+	return fileContent
+	
+	}
 	/**
 	 * @param args
 	 * @throws IOException
@@ -54,7 +59,8 @@ import javafx.stage.FileChooser.ExtensionFilter;
 		
 		HashSet<GHUser> allStudents = new HashSet<>();
 
-		String teamAssignmentsFile = LabCodeRepoSetupMain.getTeamAssignmentFile(arg);
+		String teamAssignmentsFile = ScriptingEngine.gitScriptRun("https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git", "getFile.groovy")
+
 		println "Loading file "+teamAssignmentsFile
 		GitHub github = LabCodeRepoSetupMain.getGithub();
 
@@ -417,21 +423,6 @@ import javafx.stage.FileChooser.ExtensionFilter;
 		return myTeamRepo;
 	}
 
-	public static String getTeamAssignmentFile(String[] a) {
-		@SuppressWarnings("restriction")
-
-		String teamAssignmentsFile;
-		if (a.length == 0) {
-			String p = new FileSelectionFactory().GetFile(
-				ScriptingEngine.getRepositoryCloneDirectory("https://github.com/WPIRoboticsEngineering/LabCodeRepoSetup.git"), 
-				new ExtensionFilter("json file", "*.JSON", "*.json")
-				).getAbsolutePath();
-			teamAssignmentsFile = p;
-		} else{
-			teamAssignmentsFile = a[0];
-		}
-		return teamAssignmentsFile;
-	}
 
 	public static GitHub getGithub() throws IOException {
 		File workspace = new File(System.getProperty("user.home") + "/bowler-workspace/");
