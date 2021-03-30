@@ -339,6 +339,10 @@ private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> te
 		}
 		git.commit().setAll(true).setMessage("Doxygen update").call();
 	}
+	git
+	.push()
+	.setCredentialsProvider(PasswordManager.getCredentialProvider())
+	.call()
 	git.close()
 	return myTeamRepo;
 }
