@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.Repository
 import org.kohsuke.github.GHCreateRepositoryBuilder;
 import org.kohsuke.github.GHOrganization;
 import org.kohsuke.github.GHRepository;
@@ -280,146 +282,165 @@ public String readFileToString(File f){
 			String sourceProj = teamAssignments.get(repoDestBaseName).get(0);
 			String sourceRepo = teamAssignments.get(repoDestBaseName).get(1);
 			if (sourceProj != null && sourceRepo != null) {
-				sourceURL = "git@github.com:" + sourceProj + "/" + sourceRepo + ".git";
-
-				File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
-				if (!tmp.exists()) {
-					tmp.mkdirs();
+				
+				sourceURL = "https://github.com/" + sourceProj + "/" + sourceRepo + ".git";
+				def URLOfStudentRepo="https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git"
+				ScriptingEngine.pull(sourceURL);
+				Repository repoOfStudent=ScriptingEngine.getRepository(sourceURL)
+				Git git = new Git(repoOfStudent);
+				repoOfStudent.getConfig().setString("remote", "origin", "url", URLOfStudentRepo);
+				try {
+					def returnVal= git
+					 .push()
+					 .setCredentialsProvider(PasswordManager.getCredentialProvider())
+					 .call()
+					 for(def result:returnVal)
+						 println result
+				}catch(Throwable t) {
+					t.printStackTrace()
 				}
-				tmp.deleteOnExit();
-				cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
-				cloneDir = new File(cloneDirString);
-				if (cloneDir.exists()) {
+				repoOfStudent.getConfig().setString("remote", "origin", "url", sourceURL);
+				git.close()
+				ScriptingEngine.pull(URLOfStudentRepo);
 
-					System.out.println(cloneDir.getAbsolutePath() + " Exists");
-					List<String> commands = new ArrayList<String>();
-
-					commands = new ArrayList<String>();
-					commands.add("rm"); // command
-					commands.add("-rf"); // command
-					commands.add(cloneDir.getAbsolutePath()); // command
-					run(commands, tmp);
-
-					commands = new ArrayList<String>();
-					commands.add("cp"); // command
-					commands.add("-R"); // command
-					commands.add(sourceRepo + "TMP"); // command
-					commands.add(sourceRepo); // command
-					run(commands, tmp);
-
-					commands = new ArrayList<String>();
-					commands.add("git"); // command
-					commands.add("remote"); // command
-					commands.add("set-url"); // command
-					commands.add("origin"); // command
-					commands.add(sourceURL); // command
-					run(commands, cloneDir);
-					commands = new ArrayList<String>();
-					commands.add("git"); // command
-					commands.add("pull"); // command
-					commands.add("origin"); // command
-					commands.add("main"); // command
-					run(commands, cloneDir);
-				} else {
-					System.out.println("Cloning " + sourceURL);
-					System.out.println("Cloning to " + sourceRepo);
-					// creating list of commands
-					List<String> commands = new ArrayList<String>();
-					commands.add("git"); // command
-					commands.add("clone"); // command
-					commands.add(sourceURL); // command
-					run(commands, tmp);
-
-					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
-
-					commands = new ArrayList<String>();
-					commands.add("cp"); // command
-					commands.add("-R"); // command
-					commands.add(sourceRepo); // command
-					commands.add(sourceRepo + "TMP"); // command
-					run(commands, tmp);
-
-				}
+//				File tmp = new File(System.getProperty("java.io.tmpdir") + "/gittmp/");
+//				if (!tmp.exists()) {
+//					tmp.mkdirs();
+//				}
+//				tmp.deleteOnExit();
+//				cloneDirString = tmp.getAbsolutePath() + "/" + sourceRepo;
+//				cloneDir = new File(cloneDirString);
+//				if (cloneDir.exists()) {
+//
+//					System.out.println(cloneDir.getAbsolutePath() + " Exists");
+//					List<String> commands = new ArrayList<String>();
+//
+//					commands = new ArrayList<String>();
+//					commands.add("rm"); // command
+//					commands.add("-rf"); // command
+//					commands.add(cloneDir.getAbsolutePath()); // command
+//					run(commands, tmp);
+//
+//					commands = new ArrayList<String>();
+//					commands.add("cp"); // command
+//					commands.add("-R"); // command
+//					commands.add(sourceRepo + "TMP"); // command
+//					commands.add(sourceRepo); // command
+//					run(commands, tmp);
+//
+//					commands = new ArrayList<String>();
+//					commands.add("git"); // command
+//					commands.add("remote"); // command
+//					commands.add("set-url"); // command
+//					commands.add("origin"); // command
+//					commands.add(sourceURL); // command
+//					run(commands, cloneDir);
+//					commands = new ArrayList<String>();
+//					commands.add("git"); // command
+//					commands.add("pull"); // command
+//					commands.add("origin"); // command
+//					commands.add("main"); // command
+//					run(commands, cloneDir);
+//				} else {
+//					System.out.println("Cloning " + sourceURL);
+//					System.out.println("Cloning to " + sourceRepo);
+//					// creating list of commands
+//					List<String> commands = new ArrayList<String>();
+//					commands.add("git"); // command
+//					commands.add("clone"); // command
+//					commands.add(sourceURL); // command
+//					run(commands, tmp);
+//
+//					cloneDir = new File(tmp.getAbsolutePath() + "/" + sourceRepo);
+//
+//					commands = new ArrayList<String>();
+//					commands.add("cp"); // command
+//					commands.add("-R"); // command
+//					commands.add(sourceRepo); // command
+//					commands.add(sourceRepo + "TMP"); // command
+//					run(commands, tmp);
+//
+//				}
 
 			}
 		} catch (Exception e) {
 			System.out.println("No source project found, leaving repos blank");
 		}
-		if (cloneDir != null && cloneDir.exists()) {
-			// creating list of commands
-			List<String> commands = new ArrayList<String>();
-			commands.add("git"); // command
-			commands.add("remote"); // command
-			commands.add("set-url"); // command
-			commands.add("origin"); // command
-			commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
-			run(commands, cloneDir);
-
-			commands = new ArrayList<String>();
-			commands.add("git"); // command
-			commands.add("checkout"); // command
-			commands.add("main"); // command
-			run(commands, cloneDir);
-
-			commands = new ArrayList<String>();
-			commands.add("git"); // command
-			commands.add("remote"); // command
-			commands.add("-v"); // command
-			run(commands, cloneDir);
-
-			commands = new ArrayList<String>();
-			commands.add("git"); // command
-			commands.add("config"); // command
-			commands.add("-l"); // command
-			run(commands, cloneDir);
-
-			File templateINO = new File(cloneDir.getAbsolutePath() + "/template.ino");
-			if (templateINO.exists()) {
-				commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("mv"); // command
-				commands.add("template.ino"); // command
-				commands.add(repoFullName + ".ino"); // command
-				run(commands, cloneDir);
-
-				commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("commit"); // command
-				commands.add("-a"); // command
-				commands.add("-m'Changing ino name'"); // command
-				run(commands, cloneDir);
-			}
-			File doxyfile = new File(cloneDir.getAbsolutePath() + "/doxy.doxyfile");
-			if (doxyfile.exists()) {
-				commands = new ArrayList<String>();
-				commands.add("doxygen"); // command
-				commands.add("doxy.doxyfile"); // command
-				run(commands, cloneDir);
-
-				commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("add"); // command
-				commands.add("doc/html/*"); // command
-				run(commands, cloneDir);
-
-				commands = new ArrayList<String>();
-				commands.add("git"); // command
-				commands.add("commit"); // command
-				commands.add("-a"); // command
-				commands.add("-mDoxygen"); // command
-				run(commands, cloneDir);
-			}
-
-			// creating list of commands
-			commands = new ArrayList<String>();
-			commands.add("git"); // command
-			commands.add("push"); // command
-			commands.add("-u"); // command
-			commands.add("origin"); // command
-			commands.add("main"); // command
-			run(commands, cloneDir);
-
-		}
+//		if (cloneDir != null && cloneDir.exists()) {
+//			// creating list of commands
+//			List<String> commands = new ArrayList<String>();
+//			commands.add("git"); // command
+//			commands.add("remote"); // command
+//			commands.add("set-url"); // command
+//			commands.add("origin"); // command
+//			commands.add("git@github.com:" + projectDestBaseName + "/" + repoFullName + ".git"); // command
+//			run(commands, cloneDir);
+//
+//			commands = new ArrayList<String>();
+//			commands.add("git"); // command
+//			commands.add("checkout"); // command
+//			commands.add("main"); // command
+//			run(commands, cloneDir);
+//
+//			commands = new ArrayList<String>();
+//			commands.add("git"); // command
+//			commands.add("remote"); // command
+//			commands.add("-v"); // command
+//			run(commands, cloneDir);
+//
+//			commands = new ArrayList<String>();
+//			commands.add("git"); // command
+//			commands.add("config"); // command
+//			commands.add("-l"); // command
+//			run(commands, cloneDir);
+//
+//			File templateINO = new File(cloneDir.getAbsolutePath() + "/template.ino");
+//			if (templateINO.exists()) {
+//				commands = new ArrayList<String>();
+//				commands.add("git"); // command
+//				commands.add("mv"); // command
+//				commands.add("template.ino"); // command
+//				commands.add(repoFullName + ".ino"); // command
+//				run(commands, cloneDir);
+//
+//				commands = new ArrayList<String>();
+//				commands.add("git"); // command
+//				commands.add("commit"); // command
+//				commands.add("-a"); // command
+//				commands.add("-m'Changing ino name'"); // command
+//				run(commands, cloneDir);
+//			}
+//			File doxyfile = new File(cloneDir.getAbsolutePath() + "/doxy.doxyfile");
+//			if (doxyfile.exists()) {
+//				commands = new ArrayList<String>();
+//				commands.add("doxygen"); // command
+//				commands.add("doxy.doxyfile"); // command
+//				run(commands, cloneDir);
+//
+//				commands = new ArrayList<String>();
+//				commands.add("git"); // command
+//				commands.add("add"); // command
+//				commands.add("doc/html/*"); // command
+//				run(commands, cloneDir);
+//
+//				commands = new ArrayList<String>();
+//				commands.add("git"); // command
+//				commands.add("commit"); // command
+//				commands.add("-a"); // command
+//				commands.add("-mDoxygen"); // command
+//				run(commands, cloneDir);
+//			}
+//
+//			// creating list of commands
+//			commands = new ArrayList<String>();
+//			commands.add("git"); // command
+//			commands.add("push"); // command
+//			commands.add("-u"); // command
+//			commands.add("origin"); // command
+//			commands.add("main"); // command
+//			run(commands, cloneDir);
+//
+//		}
 		return myTeamRepo;
 	}
 
