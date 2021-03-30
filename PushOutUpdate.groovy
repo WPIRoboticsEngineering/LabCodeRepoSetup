@@ -52,6 +52,7 @@ for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			GHRepository myTeamRepo = dest.getRepository(repoFullName);
 			
 			if (myTeamRepo == null) {
+				println repoFullName+ " doesnt exist"
 				continue;
 			}
 			if(Thread.interrupted())
@@ -60,17 +61,29 @@ for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			
 			Repository repoOfStudent=ScriptingEngine.getRepository(URLOfStudentRepo)
 			Git git = new Git(repoOfStudent);
-			repoOfStudent.getConfig().setString("remote", "upstream", "url", URLOfupstream);
-			git
-			 .pull()
-			 .setCredentialsProvider(PasswordManager.getCredentialProvider())
-			 .setRemote("upstream")
-			 .call();
-			git
-			 .push()
-			 .setCredentialsProvider(PasswordManager.getCredentialProvider())
-			 .setRemote("origin")
-			 .call();
+			repoOfStudent.getConfig().setString("remote", "origin", "url", URLOfupstream);
+			try {
+				def returnVal= git
+				 .pull()
+				 .setCredentialsProvider(PasswordManager.getCredentialProvider())
+				 .call();
+				 for(def result:returnVal)
+					 println result
+			}catch(Throwable t) {
+				t.printStackTrace()
+			}
+			repoOfStudent.getConfig().setString("remote", "origin", "url", URLOfStudentRepo);
+			try {
+				def returnVal= git
+				 .push()
+				 .setCredentialsProvider(PasswordManager.getCredentialProvider())
+				 .setRemote("origin")
+				 .call()
+				 for(def result:returnVal)
+					 println result
+			}catch(Throwable t) {
+				t.printStackTrace()
+			}
 			git.close()
 
 		} catch (Throwable t) {

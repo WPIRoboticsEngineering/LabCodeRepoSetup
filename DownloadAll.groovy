@@ -2,6 +2,7 @@ import java.lang.reflect.Type
 
 import org.apache.commons.io.FileUtils
 import org.kohsuke.github.GHOrganization
+import org.kohsuke.github.GHRepository
 import org.kohsuke.github.GitHub
 
 import com.google.gson.Gson
@@ -40,8 +41,15 @@ for (int x = 0; x < repoDestBaseNames.size(); x++) {
 			String teamString = i > 9 ? "" + i : "0" + i;
 
 			String repoFullName = repoDestBaseName + teamString;
+			def URLOfStudentRepo = "https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git"
 			
-			ScriptingEngine.pull("https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git")
+			GHRepository myTeamRepo = dest.getRepository(repoFullName);
+			
+			if (myTeamRepo == null) {
+				println repoFullName+ " doesnt exist"
+				continue;
+			}
+			ScriptingEngine.pull(URLOfStudentRepo)
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
