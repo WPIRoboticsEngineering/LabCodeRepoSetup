@@ -1,5 +1,5 @@
 {
-"deleteall":["true"],
+"deleteall":["false"],
 "homework":["false"],
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["2002_LabTeam_"],
