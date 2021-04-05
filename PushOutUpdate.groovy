@@ -21,7 +21,7 @@ int numberOfTeams = 0;
 Gson gson = new GsonBuilder().disableHtmlEscaping().setPrettyPrinting().create();
 Type collectionType = new TypeToken<HashMap<String, ArrayList<String>>>() {
 }.getType();
-String json = FileUtils.readFileToString(new File(teamAssignmentsFile));
+String json = new File(teamAssignmentsFile).text;
 HashMap<String, ArrayList<String>> teamAssignments = gson.fromJson(json, collectionType);
 String projectDestBaseName = teamAssignments.get("projectName").get(0);
 ArrayList<String> repoDestBaseNames = teamAssignments.get("repoDestBaseNames");
