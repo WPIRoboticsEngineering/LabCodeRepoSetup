@@ -274,7 +274,6 @@ private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> te
 	System.out.println("Missing Repo, creating " + repoFullName);
 	myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
 	def URLOfStudentRepo="https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git"
-	ScriptingEngine.deleteRepo(URLOfStudentRepo)
 	while (dest.getRepository(repoFullName) == null) {
 		System.out.println("Waiting for the creation of " + repoFullName);
 		Thread.sleep(1000);
