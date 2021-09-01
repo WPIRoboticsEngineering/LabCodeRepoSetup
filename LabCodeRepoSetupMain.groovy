@@ -96,7 +96,7 @@ public void start() throws Exception {
 	Map<String, GHTeam> teams = dest.getTeams();
 	GHTeam teachTeam = teams.get("TeachingStaff");
 
-	boolean deleteAll = false;
+	String deleteAll = null;
 	try {
 		deleteAll = Boolean.parseBoolean(teamAssignments.get("deleteall").get(0));
 	} catch (Exception e) {
@@ -108,7 +108,7 @@ public void start() throws Exception {
 	if (useHW) {
 		createHomeWorkRepos(allStudents, dest, teachTeam);
 	}
-	if (deleteAll) {
+	if (deleteAll!=null && deleteAll.contains("true") ) {
 		deleteAllNonCurrentUsers(allStudents, dest);
 	}
 }
@@ -179,19 +179,22 @@ throws IOException {
 private static void processAllRepositories(HashSet<GHUser> allStudents, GitHub github, int numberOfTeams,
 		HashMap<String, ArrayList<String>> teamAssignments, String projectDestBaseName,
 		ArrayList<String> repoDestBaseNames, String teamDestBaseName, GHOrganization dest,
-		Map<String, GHTeam> teams, GHTeam teachTeam, boolean deleteAll)
+		Map<String, GHTeam> teams, GHTeam teachTeam, ArrayList<String> deleteAll)
 throws IOException, InterruptedException, Exception {
 	for (int x = 0; x < repoDestBaseNames.size(); x++) {
 		String repoDestBaseName = repoDestBaseNames.get(x);
-		if (deleteAll) {
+		if (deleteAll!=null) {
 			System.out.println("Deleteall flag in json file set, hosing all repos");
 			PagedIterable<GHRepository> repos = dest.listRepositories();
 			for (GHRepository R : repos) {
-				if (R.getFullName().contains(repoDestBaseName) || R.getFullName().contains("HomeworkCode")) {
-					System.out.println("Deleting stale Repo " + R.getFullName());
-					R.delete();
-				} else {
-					System.out.println("Keeping " + R.getFullName());
+				String rGetFullName = R.getFullName()
+				for(String del:deleteAll) {
+					if ( rGetFullName.startsWith(del) ) {
+						System.out.println("Deleting stale Repo " + rGetFullName);
+						R.delete();
+					} else {
+						System.out.println("Keeping " + rGetFullName);
+					}
 				}
 			}
 		}
@@ -254,7 +257,7 @@ throws IOException, InterruptedException, Exception {
 
 		System.out.println("All Students " + allStudents.size());
 		PagedIterable<GHTeam> allTeams = dest.listTeams();
-		if (deleteAll)
+		if (deleteAll!=null)
 			for (GHTeam t : allTeams) {
 				if (t.getName().startsWith("HomeworkTeam")) {
 					System.out.println("Deleting team " + t.getName());

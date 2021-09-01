@@ -13,7 +13,7 @@ Install [BowlerStudio](https://commonwealthrobotics.com/) and Git on a Linux Mac
 
 ```
 {
-"deleteall":["false"],  
+"deleteall":["OldRepoBaseName","RBE2002Code"],  
 "projectName":["RBE200x-lab"],
 "repoDestBaseNames":["RBE2002Code"],
 "teamDestBaseName":["RBE200xTeam"],
@@ -23,7 +23,7 @@ Install [BowlerStudio](https://commonwealthrobotics.com/) and Git on a Linux Mac
 "21": ["kid-a"]
 }
 ```
-* deleteall - This is the flag to delete the stale repositories. It is much easier than deleting through the browser, but obviously dangerious
+* deleteall - This is a list of base names of repos to be deleted. Any repo that starts with a string from the list will be deleted. 
 * projectName - This is the name of the GItHub project we are modifying
 * repoDestBaseNames - This is the stub for the repositories that the students will own. Note this is a list and you can create as many repos for each team as desired.
 * teamDestBaseName - The base of the team name as it exists in GitHub. NOTE this needs to already esist in GitHub and needs to be created only once ever. 
