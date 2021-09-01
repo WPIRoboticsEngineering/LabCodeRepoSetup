@@ -274,6 +274,7 @@ private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> te
 	System.out.println("Missing Repo, creating " + repoFullName);
 	myTeamRepo = createRepository(dest, repoFullName, "RBE Class team repo for team " + teamString);
 	def URLOfStudentRepo="https://github.com/" + projectDestBaseName + "/" + repoFullName + ".git"
+	ScriptingEngine.deleteRepo(URLOfStudentRepo)
 	while (dest.getRepository(repoFullName) == null) {
 		System.out.println("Waiting for the creation of " + repoFullName);
 		Thread.sleep(1000);
@@ -303,12 +304,17 @@ private static GHRepository createTeamRepo(HashMap<String, ArrayList<String>> te
 			sourceRepositoryObject.getConfig().setString("remote", "origin", "url", sourceURL);
 			git.close()
 
-
+			String fullBranch = ScriptingEngine.getFullBranch(URLOfStudentRepo);
+			println "Default branch is "+fullBranch
+			if(fullBranch==null)
+				fullBranch=ScriptingEngine.newBranch(URLOfStudentRepo, "main");
+			ScriptingEngine.pull(URLOfStudentRepo);
 		}
 	} catch (Exception e) {
 		System.out.println("No source project found, leaving repos blank");
+		return myTeamRepo
 	}
-	ScriptingEngine.pull(URLOfStudentRepo);
+
 	cloneDir=ScriptingEngine.getRepositoryCloneDirectory(URLOfStudentRepo)
 	Repository studentRepositoryObject=ScriptingEngine.getRepository(sourceURL)
 	Git git = new Git(studentRepositoryObject);
