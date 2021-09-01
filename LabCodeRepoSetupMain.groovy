@@ -96,9 +96,9 @@ public void start() throws Exception {
 	Map<String, GHTeam> teams = dest.getTeams();
 	GHTeam teachTeam = teams.get("TeachingStaff");
 
-	String deleteAll = null;
+	ArrayList<String> deleteAll = null;
 	try {
-		deleteAll = Boolean.parseBoolean(teamAssignments.get("deleteall").get(0));
+		deleteAll = teamAssignments.get("deleteall");
 	} catch (Exception e) {
 	}
 
@@ -108,9 +108,7 @@ public void start() throws Exception {
 	if (useHW) {
 		createHomeWorkRepos(allStudents, dest, teachTeam);
 	}
-	if (deleteAll!=null && deleteAll.contains("true") ) {
-		deleteAllNonCurrentUsers(allStudents, dest);
-	}
+	deleteAllNonCurrentUsers(allStudents, dest);
 }
 
 private static void deleteAllNonCurrentUsers(HashSet<GHUser> allStudents, GHOrganization dest)
@@ -189,14 +187,15 @@ throws IOException, InterruptedException, Exception {
 			for (GHRepository R : repos) {
 				String rGetFullName = R.getFullName()
 				for(String del:deleteAll) {
-					if ( rGetFullName.startsWith(del) ) {
+					if ( rGetFullName.contains(del) ) {
 						System.out.println("Deleting stale Repo " + rGetFullName);
 						R.delete();
 					} else {
-						System.out.println("Keeping " + rGetFullName);
+						System.out.println("Keeping " + rGetFullName+" does not contain "+del);
 					}
 				}
 			}
+			//return
 		}
 		System.out.println("Looking for source information for " + repoDestBaseName);
 		File cloneDir = null;
